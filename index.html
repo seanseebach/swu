@@ -252,14 +252,14 @@ body{background:radial-gradient(1.2px 1.2px at 12% 18%,#fff8,transparent),radial
 .laptop #p1 .face,.laptop #p2 .face{width:100cqw;height:100cqh;transform:translate(-50%,-50%);padding:24px 24px 44px;
   grid-template-columns:auto minmax(0,1fr) auto;grid-template-rows:auto minmax(0,1fr) auto;
   grid-template-areas:"tile tile tile" "minus read plus" "init init init";justify-items:center;column-gap:20px;row-gap:16px}
-.laptop .basecard{grid-area:tile;height:clamp(110px,min(32cqh,40cqw),300px)}
+.laptop .basecard{grid-area:tile;height:clamp(140px,min(44cqh,62cqw),460px)}
 .laptop .minus{grid-area:minus}
 .laptop .readout{grid-area:read}
 .laptop .plus{grid-area:plus}
 .laptop .init{grid-area:init}
-.laptop .dmg{font-size:clamp(64px,min(24cqh,26cqw),220px)}
+.laptop .dmg{font-size:clamp(56px,min(19cqh,24cqw),200px)}
 .laptop .btn{width:clamp(64px,min(14cqh,15cqw),130px);height:clamp(64px,min(14cqh,15cqw),130px);font-size:clamp(34px,min(7cqh,7cqw),60px)}
-.laptop .init{width:clamp(76px,min(16cqh,18cqw),150px);height:clamp(76px,min(16cqh,18cqw),150px)}
+.laptop .init{width:clamp(72px,min(14cqh,17cqw),140px);height:clamp(72px,min(14cqh,17cqw),140px)}
 .laptop .sheet.to-p1,.laptop .sheet.to-p2{transform:none}
 .laptop .sheet.full.to-p1,.laptop .sheet.full.to-p2{width:100vw;height:100vh;width:100dvw;height:100dvh}
 .btn,.init{position:relative}
@@ -555,8 +555,8 @@ document.getElementById("m1").onclick=()=>{state.mode="table";save();render();bu
 document.getElementById("m2").onclick=()=>{state.mode="solo";save();render();buzz(12)};
 document.getElementById("m3").onclick=()=>{state.mode="laptop";save();render();buzz(12)};
 // Laptop keyboard controls: left player W A D, right player arrow keys
-const KEYS={KeyW:["p1","init"],KeyA:["p1","minus"],KeyD:["p1","plus"],ArrowUp:["p2","init"],ArrowLeft:["p2","minus"],ArrowRight:["p2","plus"]};
-const KEY_LABELS={p1:{minus:"A",plus:"D",init:"W"},p2:{minus:"←",plus:"→",init:"↑"}};
+const KEYS={KeyW:["p1","init"],KeyS:["p1","init"],ArrowDown:["p2","init"],KeyA:["p1","minus"],KeyD:["p1","plus"],ArrowUp:["p2","init"],ArrowLeft:["p2","minus"],ArrowRight:["p2","plus"]};
+const KEY_LABELS={p1:{minus:"A",plus:"D",init:"W / S"},p2:{minus:"←",plus:"→",init:"↑ / ↓"}};
 function flash(btn){btn.classList.add("pressed");clearTimeout(btn._f);btn._f=setTimeout(()=>btn.classList.remove("pressed"),120)}
 document.addEventListener("keydown",e=>{
   if(state.mode!=="laptop")return;
@@ -584,7 +584,7 @@ setSide();
 try{screen.orientation&&screen.orientation.addEventListener("change",setSide)}catch(e){}
 window.addEventListener("orientationchange",setSide);window.addEventListener("resize",setSide);
 // Auto-update: when the app opens or comes back, check for a newer published version and load it
-const APP_VERSION="2026-10-27.15";
+const APP_VERSION="2026-10-27.16";
 document.getElementById("verNote").textContent="Version "+APP_VERSION.split(".").pop();
 function checkUpdate(){
   if(!/github\.io$/.test(location.hostname))return;
