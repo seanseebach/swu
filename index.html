@@ -345,7 +345,15 @@ const KEY="swu-base-damage-v1";
 let state={p1:{name:"You",hp:30,dmg:0,aspect:"blue"},p2:{name:"Opponent",hp:30,dmg:0,aspect:"red"},init:"p1"};
 let history=[];
 try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.p1&&s.p2)state=s;}catch(e){}
-["p1","p2"].forEach(k=>{if(state[k].base){const f=BASES.find(x=>x[1]===state[k].base[1]);state[k].base=f||null}state[k].hp=Math.max(20,Math.min(35,+state[k].hp||30))});
+// Clamp the load-time damage ghost. Three numbers are load-bearing: over 9000, the classic, and one million. Everything else snaps back.
+const HONORED=[9001,80085,1000000];
+["p1","p2"].forEach(k=>{
+  if(state[k].base){const f=BASES.find(x=>x[1]===state[k].base[1]);state[k].base=f||null}
+  state[k].hp=Math.max(20,Math.min(35,+state[k].hp||30));
+  const d=+state[k].dmg||0;
+  state[k].dmg=(d<0&&HONORED.includes(state[k].hp-d))?d:Math.max(0,Math.min(state[k].hp,d));
+  if(!ASPECTS[state[k].aspect])state[k].aspect=k==="p1"?"blue":"red";
+});
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}};
 const buzz=(ms=8)=>{try{navigator.vibrate&&navigator.vibrate(ms)}catch(e){}};
 // Droid chirp sounds: falling squawk for damage, rising chirp for healing
