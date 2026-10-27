@@ -260,6 +260,7 @@ body{background:radial-gradient(1.2px 1.2px at 12% 18%,#fff8,transparent),radial
       </div>
     </div>
     <button class="done" id="bsDone" type="button">Done</button>
+    <p class="note" id="verNote" style="font-size:12px;margin:0"></p>
   </div>
 </div>
 
@@ -519,7 +520,8 @@ document.getElementById("boomSheet").onclick=e=>{if(e.target.id==="boomSheet")e.
 document.getElementById("sndBtn").onclick=()=>{state.muted=!state.muted;save();sndLabel();if(!state.muted)chirp(true);buzz(12)};
 build("p1");build("p2");render();sndLabel();
 // Auto-update: when the app opens or comes back, check for a newer published version and load it
-const APP_VERSION="2026-10-27.11";
+const APP_VERSION="2026-10-27.12";
+document.getElementById("verNote").textContent="Version "+APP_VERSION.split(".").pop();
 function checkUpdate(){
   if(!/github\.io$/.test(location.hostname))return;
   fetch(location.pathname+"?check="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():"").then(t=>{
