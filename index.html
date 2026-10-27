@@ -202,13 +202,20 @@ body{background:radial-gradient(1.2px 1.2px at 12% 18%,#fff8,transparent),radial
 .solo #p1 .btn{width:clamp(56px,22cqmin,104px);height:clamp(56px,22cqmin,104px);font-size:clamp(30px,11cqmin,50px)}
 .solo #p1 .bar{width:min(200px,85%);height:6px;border-radius:3px;margin-top:6px}
 @media (orientation:landscape){.solo .sheet.to-p1,.solo .sheet.to-p2{transform:none}}
-/* Two Phones, phone turned sideways: keep the controls in a column at the side */
+/* Phone turned sideways: keep the controls in a column on the short edge where the phone's top is */
 @media (orientation:landscape){
-  .solo .app{grid-template-columns:minmax(0,1fr) auto;grid-template-rows:1fr;padding-block:8px}
-  .solo #p1{grid-column:1;grid-row:1}
-  .solo .center{grid-column:2;grid-row:1;flex-direction:column;align-items:stretch;justify-content:flex-start;width:124px;gap:8px}
-  .solo .center .mode{grid-auto-flow:row;grid-auto-columns:auto;margin:0 0 auto}
-  .solo .center .icon{align-self:center}
+  .app{grid-template-columns:auto minmax(0,1fr);grid-template-rows:1fr 1fr;grid-template-areas:"bar p2" "bar p1";padding-block:8px}
+  .bar-right .app{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"p2 bar" "p1 bar"}
+  .solo .app{grid-template-rows:1fr;grid-template-areas:"bar p1"}
+  .solo.bar-right .app{grid-template-areas:"p1 bar"}
+  .center{grid-area:bar;flex-direction:column-reverse;align-items:stretch;justify-content:flex-start;width:124px;gap:8px}
+  .bar-right .center{flex-direction:column}
+  #p2{grid-area:p2}
+  #p1{grid-area:p1}
+  .center .mode{grid-auto-flow:row;grid-auto-columns:auto;margin:auto 0 0}
+  .bar-right .center .mode{margin:0 0 auto}
+  .center .icon{align-self:center}
+}
 }
 @media (orientation:portrait){.solo .sheet.to-p1,.solo .sheet.to-p2{transform:rotate(-90deg)}}
 /* Base destroyed pop-up */
@@ -519,8 +526,16 @@ document.getElementById("boomOk").onclick=()=>document.getElementById("boomSheet
 document.getElementById("boomSheet").onclick=e=>{if(e.target.id==="boomSheet")e.target.hidden=true};
 document.getElementById("sndBtn").onclick=()=>{state.muted=!state.muted;save();sndLabel();if(!state.muted)chirp(true);buzz(12)};
 build("p1");build("p2");render();sndLabel();
+// Which side the phone's top edge is on when turned sideways
+function setSide(){
+  let a=screen.orientation&&typeof screen.orientation.angle==="number"?screen.orientation.angle:(typeof window.orientation==="number"?window.orientation:0);
+  document.body.classList.toggle("bar-right",a===270||a===-90);
+}
+setSide();
+try{screen.orientation&&screen.orientation.addEventListener("change",setSide)}catch(e){}
+window.addEventListener("orientationchange",setSide);window.addEventListener("resize",setSide);
 // Auto-update: when the app opens or comes back, check for a newer published version and load it
-const APP_VERSION="2026-10-27.12";
+const APP_VERSION="2026-10-27.13";
 document.getElementById("verNote").textContent="Version "+APP_VERSION.split(".").pop();
 function checkUpdate(){
   if(!/github\.io$/.test(location.hostname))return;
