@@ -198,6 +198,13 @@ body{background:radial-gradient(1.2px 1.2px at 12% 18%,#fff8,transparent),radial
 .solo #p1 .bar{width:min(200px,85%);height:6px;border-radius:3px;margin-top:6px}
 @media (orientation:landscape){.solo .sheet.to-p1,.solo .sheet.to-p2{transform:none}}
 @media (orientation:portrait){.solo .sheet.to-p1,.solo .sheet.to-p2{transform:rotate(-90deg)}}
+/* Base destroyed pop-up */
+.boom{gap:14px;text-align:center;justify-items:center;padding:16px}
+.boom img{display:block;max-width:100%;max-height:62vmin;width:auto;height:auto;border-radius:12px;background:#000}
+.boom h2{font:700 22px/1.2 var(--font);color:var(--red);text-shadow:0 0 14px color-mix(in srgb,var(--red) 60%,transparent)}
+.boom .done{min-width:180px;padding:0 28px}
+.boom-wrap{background:rgba(0,0,0,.78);animation:boomIn .25s ease-out}
+@keyframes boomIn{from{opacity:0}to{opacity:1}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 
@@ -242,6 +249,14 @@ body{background:radial-gradient(1.2px 1.2px at 12% 18%,#fff8,transparent),radial
     <input class="search" id="pickSearch" type="search" placeholder="Search name, planet or set" autocomplete="off" aria-label="Search bases">
     <div class="list" id="pickList"></div>
     <button class="ghost" id="pickCancel" type="button">Cancel</button>
+  </div>
+</div>
+
+<div class="sheet-wrap boom-wrap" id="boomSheet" hidden>
+  <div class="sheet wide boom" id="boomInner" role="alertdialog" aria-labelledby="boomTitle">
+    <img id="boomImg" src="https://i.makeagif.com/media/2-13-2016/gnZi4k.gif" alt="">
+    <h2 id="boomTitle">Base destroyed</h2>
+    <button class="done" id="boomOk" type="button">Close</button>
   </div>
 </div>
 
@@ -299,6 +314,17 @@ function coin(){
     o.connect(g).connect(c.destination);o.start(t+d);o.stop(t+d+len+0.02);
   });
 }
+// Base destroyed pop-up, turned to face the player whose base fell
+const boomImg=document.getElementById("boomImg");
+boomImg.addEventListener("error",()=>{boomImg.hidden=true});
+function showBoom(id){
+  const box=document.getElementById("boomInner"),p=state[id];
+  box.classList.toggle("to-p1",id==="p1");box.classList.toggle("to-p2",id==="p2");
+  document.getElementById("boomTitle").textContent=(p.base?p.base[2]:(id==="p1"?"Your base":"Opponent’s base"))+" destroyed";
+  if(!boomImg.hidden){const src=boomImg.src;boomImg.src="";boomImg.src=src}
+  document.getElementById("boomSheet").hidden=false;
+  buzz(60);
+}
 const SND_ON=`<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>`,SND_OFF=`<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M17 9l5 6M22 9l-5 6"/></svg>`;
 function sndLabel(){const b=document.getElementById("sndBtn");b.innerHTML=state.muted?SND_OFF:SND_ON;b.setAttribute("aria-label",state.muted?"Turn sounds on":"Mute sounds");b.setAttribute("aria-pressed",!!state.muted)}
 
@@ -333,7 +359,7 @@ function change(id,d){
   const p=state[id];const n=Math.max(0,Math.min(p.hp,p.dmg+d));
   if(n===p.dmg)return;
   history.push({id,prev:p.dmg});if(history.length>200)history.shift();
-  p.dmg=n;save();render(id);buzz();chirp(d<0);
+  const wasAlive=p.dmg<p.hp;p.dmg=n;save();render(id);buzz();chirp(d<0);if(wasAlive&&p.dmg>=p.hp)showBoom(id);
 }
 
 function render(bumpId){
@@ -480,10 +506,12 @@ wake();
 
 document.getElementById("m1").onclick=()=>{state.mode="table";save();render();buzz(12)};
 document.getElementById("m2").onclick=()=>{state.mode="solo";save();render();buzz(12)};
+document.getElementById("boomOk").onclick=()=>document.getElementById("boomSheet").hidden=true;
+document.getElementById("boomSheet").onclick=e=>{if(e.target.id==="boomSheet")e.target.hidden=true};
 document.getElementById("sndBtn").onclick=()=>{state.muted=!state.muted;save();sndLabel();if(!state.muted)chirp(true);buzz(12)};
 build("p1");build("p2");render();sndLabel();
 // Auto-update: when the app opens or comes back, check for a newer published version and load it
-const APP_VERSION="2026-10-27.5";
+const APP_VERSION="2026-10-27.6";
 function checkUpdate(){
   if(!/github\.io$/.test(location.hostname))return;
   fetch(location.pathname+"?check="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():"").then(t=>{
