@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -480,6 +482,17 @@ document.getElementById("m1").onclick=()=>{state.mode="table";save();render();bu
 document.getElementById("m2").onclick=()=>{state.mode="solo";save();render();buzz(12)};
 document.getElementById("sndBtn").onclick=()=>{state.muted=!state.muted;save();sndLabel();if(!state.muted)chirp(true);buzz(12)};
 build("p1");build("p2");render();sndLabel();
+// Auto-update: when the app opens or comes back, check for a newer published version and load it
+const APP_VERSION="2026-10-27.5";
+function checkUpdate(){
+  if(!/github\.io$/.test(location.hostname))return;
+  fetch(location.pathname+"?check="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():"").then(t=>{
+    const m=t.match(/APP_VERSION="([^"]+)"/);
+    if(m&&m[1]!==APP_VERSION)location.replace(location.pathname+"?v="+encodeURIComponent(m[1]));
+  }).catch(()=>{});
+}
+checkUpdate();
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")checkUpdate()});
 </script>
 
 </body>
