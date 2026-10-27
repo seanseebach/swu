@@ -210,6 +210,20 @@ body{background:radial-gradient(1.2px 1.2px at 12% 18%,#fff8,transparent),radial
 .boom .done{min-width:180px;padding:0 28px}
 .boom-wrap{background:rgba(0,0,0,.78);animation:boomIn .25s ease-out}
 @keyframes boomIn{from{opacity:0}to{opacity:1}}
+/* Full-screen sheets (base settings and base list), turned to face their player */
+.sheet.full{flex:none;width:100vw;height:100vh;width:100dvw;height:100dvh;max-height:none;border-radius:0;border:0;box-sizing:border-box;
+  padding:max(24px,env(safe-area-inset-top,0px),env(safe-area-inset-bottom,0px),env(safe-area-inset-left,0px),env(safe-area-inset-right,0px));
+  grid-template-rows:auto minmax(0,1fr) auto;align-content:stretch;gap:18px}
+@media (orientation:portrait){.sheet.full.to-p1,.sheet.full.to-p2{width:100vh;height:100vw;width:100dvh;height:100dvw}}
+.sheet.full h2{font-size:22px}
+.sheet.full .cols{align-content:center;gap:28px}
+.sheet.full .pick{min-height:64px;font-size:18px}
+.sheet.full .pick small{font-size:14px}
+.sheet.full .sw{height:56px;font-size:14px}
+.sheet.full .swatches{grid-auto-rows:56px;align-content:start}
+.sheet.full .col{align-content:start}
+.sheet.full.picker{grid-template-rows:auto auto minmax(0,1fr) auto}
+.sheet-wrap:has(.sheet.full){background:#101626}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 
@@ -225,7 +239,7 @@ body{background:radial-gradient(1.2px 1.2px at 12% 18%,#fff8,transparent),radial
 </div>
 
 <div class="sheet-wrap" id="baseSheet" hidden>
-  <div class="sheet wide" id="baseSheetInner" role="dialog" aria-label="Base settings">
+  <div class="sheet wide full" id="baseSheetInner" role="dialog" aria-label="Base settings">
     <h2 id="bsTitle">Base</h2>
     <div class="cols">
       <div class="col">
@@ -242,7 +256,7 @@ body{background:radial-gradient(1.2px 1.2px at 12% 18%,#fff8,transparent),radial
 </div>
 
 <div class="sheet-wrap" id="pickSheet" hidden>
-  <div class="sheet wide picker" id="pickInner" role="dialog" aria-label="Choose a base">
+  <div class="sheet wide picker full" id="pickInner" role="dialog" aria-label="Choose a base">
     <h2>Choose a Base</h2>
     <input class="search" id="pickSearch" type="search" placeholder="Search name, planet or set" autocomplete="off" aria-label="Search bases">
     <div class="list" id="pickList"></div>
@@ -497,7 +511,7 @@ document.getElementById("boomSheet").onclick=e=>{if(e.target.id==="boomSheet")e.
 document.getElementById("sndBtn").onclick=()=>{state.muted=!state.muted;save();sndLabel();if(!state.muted)chirp(true);buzz(12)};
 build("p1");build("p2");render();sndLabel();
 // Auto-update: when the app opens or comes back, check for a newer published version and load it
-const APP_VERSION="2026-10-27.7";
+const APP_VERSION="2026-10-27.8";
 function checkUpdate(){
   if(!/github\.io$/.test(location.hostname))return;
   fetch(location.pathname+"?check="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():"").then(t=>{
