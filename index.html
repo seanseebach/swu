@@ -202,6 +202,14 @@ body{background:radial-gradient(1.2px 1.2px at 12% 18%,#fff8,transparent),radial
 .solo #p1 .btn{width:clamp(56px,22cqmin,104px);height:clamp(56px,22cqmin,104px);font-size:clamp(30px,11cqmin,50px)}
 .solo #p1 .bar{width:min(200px,85%);height:6px;border-radius:3px;margin-top:6px}
 @media (orientation:landscape){.solo .sheet.to-p1,.solo .sheet.to-p2{transform:none}}
+/* Two Phones, phone turned sideways: keep the controls in a column at the side */
+@media (orientation:landscape){
+  .solo .app{grid-template-columns:minmax(0,1fr) auto;grid-template-rows:1fr;padding-block:8px}
+  .solo #p1{grid-column:1;grid-row:1}
+  .solo .center{grid-column:2;grid-row:1;flex-direction:column;align-items:stretch;justify-content:flex-start;width:124px;gap:8px}
+  .solo .center .mode{grid-auto-flow:row;grid-auto-columns:auto;margin:0 0 auto}
+  .solo .center .icon{align-self:center}
+}
 @media (orientation:portrait){.solo .sheet.to-p1,.solo .sheet.to-p2{transform:rotate(-90deg)}}
 /* Base destroyed pop-up */
 .boom{gap:14px;text-align:center;justify-items:center;padding:16px}
@@ -511,7 +519,7 @@ document.getElementById("boomSheet").onclick=e=>{if(e.target.id==="boomSheet")e.
 document.getElementById("sndBtn").onclick=()=>{state.muted=!state.muted;save();sndLabel();if(!state.muted)chirp(true);buzz(12)};
 build("p1");build("p2");render();sndLabel();
 // Auto-update: when the app opens or comes back, check for a newer published version and load it
-const APP_VERSION="2026-10-27.10";
+const APP_VERSION="2026-10-27.11";
 function checkUpdate(){
   if(!/github\.io$/.test(location.hostname))return;
   fetch(location.pathname+"?check="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():"").then(t=>{
