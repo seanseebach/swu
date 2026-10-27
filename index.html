@@ -65,6 +65,11 @@ body{background:radial-gradient(1.2px 1.2px at 12% 18%,#fff8,transparent),radial
   padding:10px 11px;display:flex;flex-direction:column;gap:3px;overflow:hidden;font-family:var(--font)}
 .bc-tag{font:700 10px/1 var(--font);letter-spacing:.14em;text-transform:uppercase;color:var(--accent);text-shadow:0 0 8px var(--accent)}
 .player[data-aspect="black"] .bc-tag{color:#c9cfdd;text-shadow:none}
+.basecard.empty{justify-content:center;align-items:center;text-align:center}
+.basecard.empty .bc-name{font-size:clamp(18px,16cqmin,30px);line-height:1.1;color:#fff}
+.basecard.empty .bc-loc,.basecard.empty .bc-foot{display:none}
+.player.nobase .bar{visibility:hidden}
+.player.nobase .dmg{color:var(--fg2);text-shadow:none}
 .bc-name{font:700 clamp(13px,10cqmin,17px)/1.15 var(--font);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-wrap:balance}
 .bc-loc{font:500 clamp(10px,7.5cqmin,13px)/1.2 var(--font);color:var(--fg2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bc-foot{margin-top:auto;display:flex;align-items:flex-end;justify-content:space-between;gap:6px}
@@ -151,7 +156,7 @@ body{background:radial-gradient(1.2px 1.2px at 12% 18%,#fff8,transparent),radial
 .seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;background:var(--fill);border-radius:9px;padding:2px;gap:2px}
 .seg button{border:0;background:transparent;color:var(--fg);font:500 15px/1 var(--font);padding:10px 0;border-radius:7px;cursor:pointer;min-height:36px}
 .seg button[aria-pressed="true"]{background:var(--gold);color:#05070d;font-weight:600}
-.swatches{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.swatches{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .sw{height:44px;border-radius:10px;border:0;cursor:pointer;color:#05070d;font:600 12px/1 var(--font);min-width:0}
 .sw[data-a="black"]{color:#fff;box-shadow:inset 0 0 0 1px var(--sep)}
 .sw[aria-pressed="true"]{outline:3px solid var(--fg);outline-offset:2px}
@@ -226,13 +231,6 @@ body{background:radial-gradient(1.2px 1.2px at 12% 18%,#fff8,transparent),radial
       <div class="col">
         <label>Base card</label>
         <button class="pick" id="pickBtn" type="button"><span id="pickLbl">Choose a base</span><i>›</i></button>
-        <div class="lblrow"><label>Base HP</label><b id="hpVal">30</b></div>
-        <div class="hprow">
-          <button class="step" id="hpDown" type="button" aria-label="Lower base HP">−</button>
-          <input class="range" id="hpRange" type="range" min="20" max="35" step="1" value="30" aria-label="Base HP">
-          <button class="step" id="hpUp" type="button" aria-label="Raise base HP">+</button>
-        </div>
-        <div class="ticks"><span>20</span><span>25</span><span>30</span><span>35</span></div>
       </div>
       <div class="col">
         <label>Aspect color</label>
@@ -331,7 +329,7 @@ function sndLabel(){const b=document.getElementById("sndBtn");b.innerHTML=state.
 function build(id){
   const el=document.getElementById(id);
   el.innerHTML=`<div class="face">
-      <button class="basecard base" type="button" aria-label="Choose base"><img class="bc-img" alt=""><span class="bc-tag"></span><span class="bc-name"></span><span class="bc-loc"></span><span class="bc-foot"><span class="bc-set"></span><span class="bc-hp"></span></span></button>
+      <button class="basecard base" type="button" aria-label="Choose base"><img class="bc-img" alt=""><span class="bc-name"></span><span class="bc-loc"></span><span class="bc-foot"><span class="bc-set"></span><span class="bc-hp"></span></span></button>
       <button class="btn minus" type="button" aria-label="Deal 1 damage">−</button>
       <div class="readout" aria-live="polite">
         <div class="dmg">0</div>
@@ -356,7 +354,8 @@ function hold(btn,fn){
 }
 
 function change(id,d){
-  const p=state[id];const n=Math.max(0,Math.min(p.hp,p.dmg+d));
+  const p=state[id];
+  if(!p.base){if(document.getElementById("baseSheet").hidden&&document.getElementById("pickSheet").hidden)openBase(id);return}const n=Math.max(0,Math.min(p.hp,p.dmg+d));
   if(n===p.dmg)return;
   history.push({id,prev:p.dmg});if(history.length>200)history.shift();
   const wasAlive=p.dmg<p.hp;p.dmg=n;save();render(id);buzz();chirp(d<0);if(wasAlive&&p.dmg>=p.hp)showBoom(id);
@@ -371,11 +370,11 @@ function render(bumpId){
     const p=state[id],el=document.getElementById(id);
     el.style.setProperty("--accent",`var(--${p.aspect})`);
     el.dataset.aspect=p.aspect;
-    const dead=p.dmg>=p.hp;
+    const b0=p.base,dead=!!b0&&p.dmg>=p.hp;
+    el.classList.toggle("nobase",!b0);card0(el,!b0);
     el.classList.toggle("dead",dead);
     el.classList.toggle("has-init",state.init===id);
     const b=p.base;
-    el.querySelector(".bc-tag").textContent=id==="p1"?"Your Base":"Opponent";
     el.querySelector(".bc-name").textContent=b?b[2]:"Choose a Base";
     const card=el.querySelector(".basecard"),img=card.querySelector(".bc-img"),url=b&&b[7]?b[7]:"";
     card.setAttribute("aria-label",b?`${b[2]}, ${b[3]}. Change base`:"Choose base");
@@ -384,10 +383,10 @@ function render(bumpId){
       if(url){img.onload=()=>{if(img.dataset.src===url)card.classList.add("has-img")};img.onerror=()=>card.classList.remove("has-img");img.src=url}
       else img.removeAttribute("src");
     }
-    el.querySelector(".bc-loc").textContent=b?b[3]:"Tap to pick a card";
+    el.querySelector(".bc-loc").textContent=b?b[3]:"";
     el.querySelector(".bc-set").textContent=b?b[1]:"";
-    el.querySelector(".bc-hp").innerHTML=`${p.hp}<small>HP</small>`;
-    const d=el.querySelector(".dmg");d.textContent=Math.max(0,p.hp-p.dmg);el.querySelector(".readout").setAttribute("aria-label",dead?"Base defeated":`${Math.max(0,p.hp-p.dmg)} HP remaining`);
+    el.querySelector(".bc-hp").innerHTML=b?`${p.hp}<small>HP</small>`:"";
+    const d=el.querySelector(".dmg");d.textContent=b?Math.max(0,p.hp-p.dmg):"–";el.querySelector(".readout").setAttribute("aria-label",!b?"No base chosen":dead?"Base defeated":`${Math.max(0,p.hp-p.dmg)} HP remaining`);
     if(bumpId===id){d.classList.remove("bump");void d.offsetWidth;d.classList.add("bump")}
     el.querySelector(".bar i").style.width=Math.max(0,(p.hp-p.dmg)/p.hp*100)+"%";
     {const has=state.init===id,w=has?"Has":"Take",ib=el.querySelector(".init");
@@ -397,12 +396,7 @@ function render(bumpId){
 
 // Base settings sheet
 let editing="p1";
-const hpRange=document.getElementById("hpRange");
-function showHp(){
-  const h=state[editing].hp;
-  hpRange.value=h;hpRange.style.setProperty("--pct",((h-HP_MIN)/(HP_MAX-HP_MIN)*100)+"%");
-  document.getElementById("hpVal").textContent=h+" HP";
-}
+function card0(el,empty){el.querySelector(".basecard").classList.toggle("empty",empty)}
 function showPick(){
   const b=state[editing].base;
   document.getElementById("pickLbl").innerHTML=b?`${esc(b[2])}<small>${esc(b[3])} · ${b[1]}</small>`:`Choose a base<small>${BASES.length} base cards</small>`;
@@ -440,19 +434,11 @@ document.getElementById("pickBtn").onclick=openPicker;
 document.getElementById("pickSearch").addEventListener("input",e=>fillList(e.target.value));
 document.getElementById("pickCancel").onclick=()=>{document.getElementById("pickSheet").hidden=true;openBase(editing)};
 document.getElementById("pickSheet").onclick=e=>{if(e.target.id==="pickSheet"){e.target.hidden=true;openBase(editing)}};
-function setHp(h){
-  h=Math.max(HP_MIN,Math.min(HP_MAX,h));
-  if(h===state[editing].hp)return;
-  state[editing].hp=h;state[editing].dmg=Math.min(state[editing].dmg,h);save();render();showHp();buzz(5);
-}
-hpRange.addEventListener("input",()=>setHp(+hpRange.value));
-document.getElementById("hpDown").onclick=()=>setHp(state[editing].hp-1);
-document.getElementById("hpUp").onclick=()=>setHp(state[editing].hp+1);
 function openBase(id){
   const s=document.getElementById("baseSheetInner");
   s.classList.toggle("to-p1",id==="p1");s.classList.toggle("to-p2",id==="p2");
   document.getElementById("bsTitle").textContent=id==="p1"?"Your Base":"Opponent’s Base";
-  editing=id;showHp();showPick();
+  editing=id;showPick();
   const as=document.getElementById("aspSeg");
   as.innerHTML=Object.entries(ASPECTS).map(([k,v])=>`<button class="sw" type="button" data-a="${k}" style="background:var(--${k})" aria-pressed="${state[id].aspect===k}">${v}</button>`).join("");
   as.querySelectorAll("button").forEach(b=>b.onclick=()=>{state[id].aspect=b.dataset.a;save();render();as.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b))});
@@ -511,7 +497,7 @@ document.getElementById("boomSheet").onclick=e=>{if(e.target.id==="boomSheet")e.
 document.getElementById("sndBtn").onclick=()=>{state.muted=!state.muted;save();sndLabel();if(!state.muted)chirp(true);buzz(12)};
 build("p1");build("p2");render();sndLabel();
 // Auto-update: when the app opens or comes back, check for a newer published version and load it
-const APP_VERSION="2026-10-27.6";
+const APP_VERSION="2026-10-27.7";
 function checkUpdate(){
   if(!/github\.io$/.test(location.hostname))return;
   fetch(location.pathname+"?check="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():"").then(t=>{
