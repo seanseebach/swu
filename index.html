@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Base Damage">
+<meta name="theme-color" content="#05070d">
+<title>SWU Base Damage</title>
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:border-box;height:100%;background:#05070d}[hidden]{display:none!important}</style>
+</head>
+<body>
+<style>
+/* Layout: two halves facing the phone's long sides (each rotated 90° in portrait, 0°/180° in landscape) around a slim center strip; Apple HIG system styling */
+:root{
+  /* Single dark look: deep space, holo-glass panels, lightsaber aspect colors, gold accents */
+  --bg:#05070d; --card:rgba(16,22,36,.78); --fg:#eef3ff; --fg2:rgba(190,205,235,.62);
+  --fill:rgba(130,160,220,.14); --sep:rgba(130,160,220,.28); --edge:rgba(140,180,255,.16);
+  --red:#ff3c3c; --blue:#3fb6ff; --green:#4dff7c; --yellow:#ffe81f; --white:#f4f6ff; --black:#3a3f4f; --gold:#ffe81f; --gray:#8e96a8;
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", system-ui, sans-serif;
+  --round: ui-rounded, "SF Pro Rounded", -apple-system, system-ui, sans-serif;
+  color-scheme:dark;
+}
+
+html,body{height:100%}
+html{background:var(--bg)}
+body{background:radial-gradient(1.2px 1.2px at 12% 18%,#fff8,transparent),radial-gradient(1px 1px at 78% 9%,#fff9,transparent),radial-gradient(1.4px 1.4px at 41% 63%,#fff7,transparent),radial-gradient(1px 1px at 88% 72%,#fff8,transparent),radial-gradient(1px 1px at 23% 88%,#fff6,transparent),radial-gradient(1.2px 1.2px at 63% 35%,#fff6,transparent),radial-gradient(1px 1px at 7% 52%,#fff7,transparent),radial-gradient(1px 1px at 55% 92%,#fff6,transparent),radial-gradient(1.3px 1.3px at 93% 41%,#fff8,transparent),radial-gradient(1px 1px at 33% 30%,#fff5,transparent),radial-gradient(ellipse at 50% 50%,#0d1630 0%,var(--bg) 70%) fixed;background-color:var(--bg);color:var(--fg);font-family:var(--font);margin:0;overflow:hidden;
+  -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.app{height:100%;box-sizing:border-box;display:grid;gap:8px;
+  padding-block:16px 8px;padding-left:max(8px,env(safe-area-inset-left,0px));padding-right:max(8px,env(safe-area-inset-right,0px))}
+
+/* Player panel: outer box is a size container; inner face is rotated to its player */
+.player{--accent:var(--blue);background:var(--card);border:1px solid var(--edge);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-radius:22px;min-height:0;min-width:0;
+  position:relative;overflow:hidden;container-type:size;transition:background .3s}
+.player::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 28px -6px var(--accent),0 0 22px -4px var(--accent);opacity:0;transition:opacity .3s}
+.player.has-init::after{opacity:1}
+.face{position:absolute;top:50%;left:50%;box-sizing:border-box;padding:10px 16px;
+  display:grid;grid-template-columns:auto auto minmax(0,1fr) auto auto;align-items:center;gap:12px}
+
+/* Portrait (phone lying flat, players on the long sides) */
+@media (orientation:portrait){
+  .app{grid-template-columns:1fr 1fr;grid-template-rows:auto 1fr}
+  .center{grid-column:1/-1}
+  .face{width:100cqh;height:100cqw}
+  #p2 .face{transform:translate(-50%,-50%) rotate(90deg)}
+  #p1 .face{transform:translate(-50%,-50%) rotate(-90deg)}
+}
+/* Landscape (rotation unlocked): halves stack, opponent flipped 180° */
+@media (orientation:landscape){
+  .app{grid-template-rows:auto 1fr 1fr;grid-template-columns:1fr}
+  .face{width:100cqw;height:100cqh}
+  #p2 .face{transform:translate(-50%,-50%) rotate(180deg)}
+  #p1 .face{transform:translate(-50%,-50%)}
+}
+
+.basecard{position:relative;flex:none;height:clamp(76px,74cqmin,150px);aspect-ratio:7/5;max-width:100%;box-sizing:border-box;border-radius:12px;
+  border:1px solid color-mix(in srgb,var(--accent) 65%,transparent);cursor:pointer;color:#fff;text-align:left;
+  background:radial-gradient(120% 90% at 0% 0%,color-mix(in srgb,var(--accent) 38%,transparent),transparent 70%),linear-gradient(160deg,#141c2e,#080b14);
+  box-shadow:0 0 18px -6px var(--accent),inset 0 0 0 1px rgba(255,255,255,.04);
+  padding:10px 11px;display:flex;flex-direction:column;gap:3px;overflow:hidden;font-family:var(--font)}
+.bc-tag{font:700 10px/1 var(--font);letter-spacing:.14em;text-transform:uppercase;color:var(--accent);text-shadow:0 0 8px var(--accent)}
+.player[data-aspect="black"] .bc-tag{color:#c9cfdd;text-shadow:none}
+.bc-name{font:700 clamp(13px,10cqmin,17px)/1.15 var(--font);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-wrap:balance}
+.bc-loc{font:500 clamp(10px,7.5cqmin,13px)/1.2 var(--font);color:var(--fg2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bc-foot{margin-top:auto;display:flex;align-items:flex-end;justify-content:space-between;gap:6px}
+.bc-set{font:600 10px/1 ui-monospace,"SF Mono",Menlo,monospace;color:var(--fg2);letter-spacing:.04em}
+.bc-hp{font:700 clamp(18px,15cqmin,26px)/1 var(--round);font-variant-numeric:tabular-nums}
+.bc-hp small{font:600 10px/1 var(--font);color:var(--fg2);margin-left:2px;letter-spacing:.06em}
+.bc-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit;opacity:0;transition:opacity .25s;pointer-events:none}
+.basecard.has-img{padding:0;border-color:color-mix(in srgb,var(--accent) 80%,transparent);background:#080b14}
+.basecard.has-img .bc-img{opacity:1}
+.basecard.has-img>span{visibility:hidden}
+.basecard:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.pill{font:600 15px/1.15 var(--font);color:var(--fg);background:var(--fill);border:0;border-radius:999px;
+  padding:10px 16px;min-height:44px;display:inline-flex;align-items:center;gap:8px;cursor:pointer;white-space:nowrap}
+.pill .dot{width:12px;height:12px;border-radius:50%;background:var(--accent);flex:none;box-shadow:0 0 8px var(--accent)}
+.pill.init{color:var(--fg2)}
+/* Initiative token: round, like the physical counter */
+.init{width:72px;height:72px;aspect-ratio:1;border-radius:50%;padding:0;min-height:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;white-space:normal;text-align:center;
+  border:1.5px solid color-mix(in srgb,var(--accent) 55%,transparent);flex:none}
+.init b{font:700 11px/1 var(--font);text-transform:uppercase;letter-spacing:.08em;opacity:.8}
+.init span{font:600 12px/1 var(--font)}
+.player.has-init .pill.init{border-color:transparent}
+.player{--on:#05070d}
+.player[data-aspect="black"]{--on:#fff}
+.player.has-init .pill.init{background:var(--accent);color:var(--on);box-shadow:0 0 14px -2px var(--accent)}
+
+.btn{width:clamp(52px,38cqmin,104px);height:clamp(52px,38cqmin,104px);border-radius:50%;border:0;
+  background:var(--fill);color:var(--accent);font:500 clamp(30px,20cqmin,52px)/1 var(--round);
+  display:grid;place-items:center;cursor:pointer;transition:transform .08s, background .15s}
+.btn:active{transform:scale(.92);background:var(--sep)}
+.btn.minus{background:var(--accent);color:var(--on);box-shadow:0 0 22px -4px var(--accent)}
+.btn.plus{background:var(--fill);color:var(--accent);box-shadow:none}
+.btn:focus-visible,.pill:focus-visible,.center button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+
+.readout{text-align:center;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.dmg{font:700 clamp(48px,50cqmin,150px)/.9 var(--round);font-variant-numeric:tabular-nums;letter-spacing:-.02em;transition:color .2s;color:#fff;text-shadow:0 0 18px color-mix(in srgb,var(--accent) 70%,transparent),0 0 2px var(--accent)}
+.dmg.bump{animation:bump .18s ease-out}
+@keyframes bump{50%{transform:scale(1.08)}}
+.sub{font:500 clamp(12px,9cqmin,17px)/1.3 var(--font);color:var(--fg2);margin-top:4px;font-variant-numeric:tabular-nums}
+.bar{width:min(200px,90%);height:6px;border-radius:3px;background:var(--fill);margin-top:6px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--accent);border-radius:3px;transition:width .25s;box-shadow:0 0 8px var(--accent)}
+.player.dead .dmg{color:var(--red);text-shadow:0 0 22px var(--red)}
+.player.dead .bar i{background:var(--red)}
+
+.center{display:flex;align-items:center;gap:8px;min-width:0}
+.center button{font:600 15px/1 var(--font);border:1px solid var(--edge);border-radius:999px;padding:0 16px;min-height:44px;
+  background:var(--fill);color:var(--gold);cursor:pointer;white-space:nowrap;flex:none}
+.center button:active{background:var(--sep)}
+.center .icon{width:44px;padding:0;display:grid;place-items:center;color:var(--fg)}
+
+/* Sheets, rotated to face whoever opened them */
+.sheet-wrap{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:20}
+.sheet{background:#101626;border:1px solid var(--edge);border-radius:18px;padding:18px;width:min(360px,88vmin);max-height:90vmin;overflow:auto;box-sizing:border-box;display:grid;gap:14px}
+.sheet.wide{width:min(620px,90vmax);gap:12px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+.col{display:grid;gap:10px;min-width:0}
+.lblrow{display:flex;justify-content:space-between;align-items:baseline}
+.lblrow b{font:700 22px/1 var(--round);color:#fff;font-variant-numeric:tabular-nums}
+.pick{border:1px solid var(--edge);background:var(--fill);color:var(--fg);border-radius:12px;min-height:50px;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;text-align:left;font:600 15px/1.2 var(--font)}
+.pick span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pick small{display:block;color:var(--fg2);font-weight:500;font-size:12px;margin-top:2px}
+.pick i{font-style:normal;color:var(--gold);font-size:20px}
+.picker{grid-template-rows:auto auto minmax(0,1fr) auto;height:90vmin}
+.search{width:100%;box-sizing:border-box;border:0;border-radius:10px;background:var(--fill);color:var(--fg);font:400 17px/1 var(--font);padding:11px 12px;min-height:44px}
+.search::placeholder{color:var(--fg2)}
+.search:focus-visible{outline:2px solid var(--gold)}
+.list{overflow-y:auto;min-height:0;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;margin:0 -6px;padding:0 6px}
+.list h3{position:sticky;top:0;margin:0;padding:8px 2px 6px;background:#101626;font:600 12px/1 var(--font);color:var(--fg2);letter-spacing:.08em;text-transform:uppercase;z-index:1}
+.row{width:100%;display:grid;grid-template-columns:48px minmax(0,1fr) auto;align-items:center;gap:10px;border:0;background:transparent;color:var(--fg);padding:10px 4px;border-bottom:1px solid var(--edge);cursor:pointer;text-align:left;font:600 15px/1.2 var(--font);min-height:48px}
+.row:active{background:var(--fill)}
+.row[aria-pressed="true"]{background:color-mix(in srgb,var(--gold) 14%,transparent)}
+.row .thw{position:relative;width:48px;height:34px;border-radius:5px;overflow:hidden;display:grid;place-items:center;background:color-mix(in srgb,var(--c,var(--gray)) 22%,transparent)}
+.row .thw img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.row .d{width:12px;height:12px;border-radius:50%;background:var(--c,var(--gray))}
+.row span{min-width:0}
+.row small{display:block;color:var(--fg2);font-weight:500;font-size:12px;margin-top:2px}
+.row b{font:700 17px/1 var(--round);font-variant-numeric:tabular-nums}
+.empty{color:var(--fg2);text-align:center;padding:24px 0;font:400 15px/1.4 var(--font)}
+.ghost{border:0;background:var(--fill);color:var(--gold);font:600 17px/1 var(--font);border-radius:12px;min-height:50px;cursor:pointer}
+@media (orientation:portrait){.sheet.to-p1{transform:rotate(-90deg)}.sheet.to-p2{transform:rotate(90deg)}}
+@media (orientation:landscape){.sheet.to-p2{transform:rotate(180deg)}}
+.sheet h2{margin:0;font:600 17px/1.3 var(--font);text-align:center}
+.sheet label{font:400 13px/1 var(--font);color:var(--fg2);text-transform:uppercase;letter-spacing:.04em}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;background:var(--fill);border-radius:9px;padding:2px;gap:2px}
+.seg button{border:0;background:transparent;color:var(--fg);font:500 15px/1 var(--font);padding:10px 0;border-radius:7px;cursor:pointer;min-height:36px}
+.seg button[aria-pressed="true"]{background:var(--gold);color:#05070d;font-weight:600}
+.swatches{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.sw{height:44px;border-radius:10px;border:0;cursor:pointer;color:#05070d;font:600 12px/1 var(--font);min-width:0}
+.sw[data-a="black"]{color:#fff;box-shadow:inset 0 0 0 1px var(--sep)}
+.sw[aria-pressed="true"]{outline:3px solid var(--fg);outline-offset:2px}
+.hprow{display:grid;grid-template-columns:44px 1fr 44px;align-items:center;gap:10px}
+.hpval{font:700 34px/1 var(--round);text-align:center;color:#fff;font-variant-numeric:tabular-nums;text-shadow:0 0 14px color-mix(in srgb,var(--gold) 60%,transparent)}
+.step{width:44px;height:44px;border-radius:50%;border:0;background:var(--fill);color:var(--gold);font:500 26px/1 var(--round);cursor:pointer}
+.range{-webkit-appearance:none;appearance:none;width:100%;height:28px;background:transparent;margin:0;touch-action:none}
+.range::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:linear-gradient(90deg,var(--gold) var(--pct,50%),var(--fill) var(--pct,50%))}
+.range::-moz-range-track{height:6px;border-radius:3px;background:linear-gradient(90deg,var(--gold) var(--pct,50%),var(--fill) var(--pct,50%))}
+.range::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;border-radius:50%;background:#fff;margin-top:-11px;box-shadow:0 0 0 .5px rgba(0,0,0,.1),0 3px 8px rgba(0,0,0,.4),0 0 12px var(--gold)}
+.range::-moz-range-thumb{width:28px;height:28px;border:0;border-radius:50%;background:#fff;box-shadow:0 3px 8px rgba(0,0,0,.4),0 0 12px var(--gold)}
+.range:focus-visible{outline:3px solid var(--gold);outline-offset:4px;border-radius:6px}
+.ticks{display:flex;justify-content:space-between;font:500 12px/1 var(--font);color:var(--fg2);font-variant-numeric:tabular-nums;padding:0 2px}
+.done{border:0;background:var(--gold);color:#05070d;font:600 17px/1 var(--font);border-radius:12px;min-height:50px;cursor:pointer}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.actions button{border:0;border-radius:12px;min-height:50px;font:600 17px/1 var(--font);cursor:pointer;background:var(--fill);color:var(--gold)}
+.actions .danger{background:var(--red);color:#fff}
+.note{margin:0;text-align:center;color:var(--fg2);font:400 15px/1.35 var(--font)}
+
+/* Mode switch in the top bar */
+/* iOS segmented control */
+.mode{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;background:rgba(118,118,128,.24);border-radius:9px;padding:2px;gap:2px;margin-right:auto;min-width:0}
+.center .mode button{border:0;border-radius:7px;background:transparent;color:var(--fg);min-height:40px;padding:0 12px;font:500 13px/1 var(--font)}
+.center .mode button[aria-pressed="true"]{background:#636366;font-weight:600;box-shadow:0 3px 8px rgba(0,0,0,.25),0 0 0 .5px rgba(0,0,0,.04)}
+
+/* Two-phone mode: only your side, upright, filling the screen */
+.solo #p2{display:none}
+.solo .app{grid-template-columns:1fr;grid-template-rows:auto 1fr}
+.solo #p1 .face{width:100cqw;height:100cqh;transform:translate(-50%,-50%);padding:16px 24px;column-gap:20px;row-gap:10px;
+  grid-template-columns:auto auto minmax(0,1fr) auto auto;grid-template-rows:1fr;
+  grid-template-areas:"tile minus read plus init"}
+.solo #p1 .basecard{grid-area:tile}
+.solo #p1 .minus{grid-area:minus}
+.solo #p1 .readout{grid-area:read}
+.solo #p1 .plus{grid-area:plus}
+.solo #p1 .init{grid-area:init}
+.solo #p1 .dmg{font-size:clamp(56px,min(40cqmin,15cqw),180px)}
+.solo #p1 .btn{width:clamp(60px,min(30cqmin,12cqw),120px);height:clamp(60px,min(30cqmin,12cqw),120px);font-size:clamp(32px,min(15cqmin,6cqw),56px)}
+.solo #p1 .basecard{height:clamp(84px,min(70cqmin,20cqw),200px)}
+.solo #p1 .sub{font-size:clamp(14px,6cqmin,19px)}
+.solo #p1 .bar{width:min(260px,85%);height:8px;border-radius:4px}
+@media (orientation:landscape){.solo .sheet.to-p1,.solo .sheet.to-p2{transform:none}}
+@media (orientation:portrait){.solo .sheet.to-p1,.solo .sheet.to-p2{transform:rotate(-90deg)}}
+@media (orientation:portrait){
+  /* Rotation locked: turn the whole screen sideways so it reads with the phone horizontal */
+  .solo .app{position:fixed;top:50%;left:50%;width:100vh;width:100dvh;height:100vw;
+    transform:translate(-50%,-50%) rotate(-90deg);
+    padding-left:max(10px,env(safe-area-inset-bottom,0px));padding-right:max(10px,env(safe-area-inset-top,0px));
+    padding-top:max(14px,env(safe-area-inset-left,0px));padding-bottom:max(10px,env(safe-area-inset-right,0px))}
+  .solo .center{grid-column:auto}
+}
+@media (orientation:landscape){
+  .solo .app{grid-template-rows:auto 1fr}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="app">
+  <div class="center">
+    <div class="mode" role="group" aria-label="Phones"><button id="m1" type="button">One Phone</button><button id="m2" type="button">Two Phones</button></div>
+    <button id="resetBtn" type="button">New Game</button>
+    <button class="icon" id="fsBtn" type="button" aria-label="Enter Full Screen"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+  </div>
+  <section class="player" id="p2" aria-label="Opponent base"></section>
+  <section class="player" id="p1" aria-label="Your base"></section>
+</div>
+
+<div class="sheet-wrap" id="baseSheet" hidden>
+  <div class="sheet wide" id="baseSheetInner" role="dialog" aria-label="Base settings">
+    <h2 id="bsTitle">Base</h2>
+    <div class="cols">
+      <div class="col">
+        <label>Base card</label>
+        <button class="pick" id="pickBtn" type="button"><span id="pickLbl">Choose a base</span><i>›</i></button>
+        <div class="lblrow"><label>Base HP</label><b id="hpVal">30</b></div>
+        <div class="hprow">
+          <button class="step" id="hpDown" type="button" aria-label="Lower base HP">−</button>
+          <input class="range" id="hpRange" type="range" min="20" max="35" step="1" value="30" aria-label="Base HP">
+          <button class="step" id="hpUp" type="button" aria-label="Raise base HP">+</button>
+        </div>
+        <div class="ticks"><span>20</span><span>25</span><span>30</span><span>35</span></div>
+      </div>
+      <div class="col">
+        <label>Aspect color</label>
+        <div class="swatches" id="aspSeg"></div>
+      </div>
+    </div>
+    <button class="done" id="bsDone" type="button">Done</button>
+  </div>
+</div>
+
+<div class="sheet-wrap" id="pickSheet" hidden>
+  <div class="sheet wide picker" id="pickInner" role="dialog" aria-label="Choose a base">
+    <h2>Choose a Base</h2>
+    <input class="search" id="pickSearch" type="search" placeholder="Search name, planet or set" autocomplete="off" aria-label="Search bases">
+    <div class="list" id="pickList"></div>
+    <button class="ghost" id="pickCancel" type="button">Cancel</button>
+  </div>
+</div>
+
+<div class="sheet-wrap" id="resetSheet" hidden>
+  <div class="sheet to-p1" role="dialog" aria-label="Start new game">
+    <h2>Start a new game?</h2>
+    <p class="note">Both bases go back to full HP. Your chosen bases stay the same.</p>
+    <div class="actions">
+      <button id="rsCancel" type="button">Cancel</button>
+      <button class="danger" id="rsOk" type="button">Reset</button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet-wrap" id="fsSheet" hidden>
+  <div class="sheet to-p1" role="dialog" aria-label="Full screen">
+    <h2 id="fsTitle">Full screen isn’t available here</h2>
+    <p class="note" id="fsNote">iPhone only allows full screen for apps on the Home Screen. Open this page in Safari, tap Share, then Add to Home Screen, and launch it from the new icon.</p>
+    <button class="done" id="fsOk" type="button">OK</button>
+  </div>
+</div>
+
+<script>
+const HP_MIN=20,HP_MAX=35;
+const ASPECTS={blue:"Vigilance",green:"Command",red:"Aggression",yellow:"Cunning",white:"Heroism",black:"Villainy"};
+const BASES=[["SOR","SOR-019","Security Complex","Scarif",25,"blue","R","https://cdn.swu-db.com/images/cards/SOR/019.png"],["SOR","SOR-020","Capital City","Lothal",30,"blue","C","https://cdn.swu-db.com/images/cards/SOR/020.png"],["SOR","SOR-021","Dagobah Swamp","Dagobah",30,"blue","C","https://cdn.swu-db.com/images/cards/SOR/021.png"],["SOR","SOR-022","Energy Conversion Lab","Eadu",25,"green","R","https://cdn.swu-db.com/images/cards/SOR/022.png"],["SOR","SOR-023","Command Center","Death Star",30,"green","C","https://cdn.swu-db.com/images/cards/SOR/023.png"],["SOR","SOR-024","Echo Base","Hoth",30,"green","C","https://cdn.swu-db.com/images/cards/SOR/024.png"],["SOR","SOR-025","Tarkintown","Lothal",25,"red","R","https://cdn.swu-db.com/images/cards/SOR/025.png"],["SOR","SOR-026","Catacombs of Cadera","Jedha",30,"red","C","https://cdn.swu-db.com/images/cards/SOR/026.png"],["SOR","SOR-027","Kestro City","Vardos",30,"red","C","https://cdn.swu-db.com/images/cards/SOR/027.png"],["SOR","SOR-028","Jedha City","Jedha",25,"yellow","R","https://cdn.swu-db.com/images/cards/SOR/028.png"],["SOR","SOR-029","Administrator's Tower","Cloud City",30,"yellow","C","https://cdn.swu-db.com/images/cards/SOR/029.png"],["SOR","SOR-030","Chopper Base","Atollon",30,"yellow","C","https://cdn.swu-db.com/images/cards/SOR/030.png"],["SHD","SHD-019","Remnant Science Facility","Nevarro",30,"blue","C","https://cdn.swu-db.com/images/cards/SHD/019.png"],["SHD","SHD-020","Remote Village","Sorgan",30,"blue","C","https://cdn.swu-db.com/images/cards/SHD/020.png"],["SHD","SHD-021","Maz Kanata's Castle","Takodana",30,"green","C","https://cdn.swu-db.com/images/cards/SHD/021.png"],["SHD","SHD-022","Nevarro City","Nevarro",30,"green","C","https://cdn.swu-db.com/images/cards/SHD/022.png"],["SHD","SHD-023","Death Watch Hideout","Concordia",30,"red","C","https://cdn.swu-db.com/images/cards/SHD/023.png"],["SHD","SHD-024","Spice Mines","Kessel",30,"red","C","https://cdn.swu-db.com/images/cards/SHD/024.png"],["SHD","SHD-025","Coronet City","Corellia",30,"yellow","C","https://cdn.swu-db.com/images/cards/SHD/025.png"],["SHD","SHD-026","Jabba's Palace","Tatooine",30,"yellow","C","https://cdn.swu-db.com/images/cards/SHD/026.png"],["TWI","TWI-019","Pau City","Utapau",26,"blue","R","https://cdn.swu-db.com/images/cards/TWI/019.png"],["TWI","TWI-020","Sundari","Mandalore",30,"blue","C","https://cdn.swu-db.com/images/cards/TWI/020.png"],["TWI","TWI-021","The Crystal City","Christophsis",30,"blue","C","https://cdn.swu-db.com/images/cards/TWI/021.png"],["TWI","TWI-022","Droid Manufactory","Geonosis",24,"green","R","https://cdn.swu-db.com/images/cards/TWI/022.png"],["TWI","TWI-023","Lair of Grievous","Vassek",30,"green","C","https://cdn.swu-db.com/images/cards/TWI/023.png"],["TWI","TWI-024","Tipoca City","Kamino",30,"green","C","https://cdn.swu-db.com/images/cards/TWI/024.png"],["TWI","TWI-025","Shadow Collective Camp","Zanbar",25,"red","R","https://cdn.swu-db.com/images/cards/TWI/025.png"],["TWI","TWI-026","KCM Mining Facility","Mustafar",30,"red","C","https://cdn.swu-db.com/images/cards/TWI/026.png"],["TWI","TWI-027","The Nest","Onderon",30,"red","C","https://cdn.swu-db.com/images/cards/TWI/027.png"],["TWI","TWI-028","Petranaki Arena","Geonosis",26,"yellow","R","https://cdn.swu-db.com/images/cards/TWI/028.png"],["TWI","TWI-029","Level 1313","Coruscant",30,"yellow","C","https://cdn.swu-db.com/images/cards/TWI/029.png"],["TWI","TWI-030","Pyke Palace","Oba Diah",30,"yellow","C","https://cdn.swu-db.com/images/cards/TWI/030.png"],["JTL","JTL-019","City in the Clouds","Cloud City",30,"blue","C","https://cdn.swu-db.com/images/cards/JTL/019.png"],["JTL","JTL-020","Shield Generator Complex","Endor",30,"blue","C","https://cdn.swu-db.com/images/cards/JTL/020.png"],["JTL","JTL-021","Colossus","Castilon",35,"blue","R","https://cdn.swu-db.com/images/cards/JTL/021.png"],["JTL","JTL-022","Resistance Headquarters","D'Qar",30,"green","C","https://cdn.swu-db.com/images/cards/JTL/022.png"],["JTL","JTL-023","Theed Palace","Naboo",30,"green","C","https://cdn.swu-db.com/images/cards/JTL/023.png"],["JTL","JTL-024","Data Vault","Scarif",33,"green","R","https://cdn.swu-db.com/images/cards/JTL/024.png"],["JTL","JTL-025","Thermal Oscillator","Starkiller Base",27,"red","R","https://cdn.swu-db.com/images/cards/JTL/025.png"],["JTL","JTL-026","Massassi Temple","Yavin 4",30,"red","C","https://cdn.swu-db.com/images/cards/JTL/026.png"],["JTL","JTL-027","Nadiri Dockyards","Nadiri",30,"red","C","https://cdn.swu-db.com/images/cards/JTL/027.png"],["JTL","JTL-028","Nabat Village","Ryloth",27,"yellow","R","https://cdn.swu-db.com/images/cards/JTL/028.png"],["JTL","JTL-029","Chopper Base","Atollon",30,"yellow","C","https://cdn.swu-db.com/images/cards/JTL/029.png"],["JTL","JTL-030","Mos Eisley","Tatooine",30,"yellow","C","https://cdn.swu-db.com/images/cards/JTL/030.png"],["JTL","JTL-031","Lake Country","Naboo",34,"","R","https://cdn.swu-db.com/images/cards/JTL/031.png"],["LOF","LOF-019","Vergence Temple","Lothal",25,"blue","R","https://cdn.swu-db.com/images/cards/LOF/019.png"],["LOF","LOF-020","Nightsister Lair","Dathomir",28,"blue","C","https://cdn.swu-db.com/images/cards/LOF/020.png"],["LOF","LOF-021","Shadowed Undercity","Coruscant",28,"blue","C","https://cdn.swu-db.com/images/cards/LOF/021.png"],["LOF","LOF-022","Mystic Monastery","Mortis",25,"green","R","https://cdn.swu-db.com/images/cards/LOF/022.png"],["LOF","LOF-023","Jedi Temple","Coruscant",28,"green","C","https://cdn.swu-db.com/images/cards/LOF/023.png"],["LOF","LOF-024","Starlight Temple","Starlight Beacon",28,"green","C","https://cdn.swu-db.com/images/cards/LOF/024.png"],["LOF","LOF-025","Temple of Destruction","Malachor",25,"red","R","https://cdn.swu-db.com/images/cards/LOF/025.png"],["LOF","LOF-026","Fortress Vader","Mustafar",28,"red","C","https://cdn.swu-db.com/images/cards/LOF/026.png"],["LOF","LOF-027","Strangled Cliffs","Dathomir",28,"red","C","https://cdn.swu-db.com/images/cards/LOF/027.png"],["LOF","LOF-028","Tomb of Eilram","Zeffo",25,"yellow","R","https://cdn.swu-db.com/images/cards/LOF/028.png"],["LOF","LOF-029","Crystal Caves","Ilum",28,"yellow","C","https://cdn.swu-db.com/images/cards/LOF/029.png"],["LOF","LOF-030","The Holy City","Jedha",28,"yellow","C","https://cdn.swu-db.com/images/cards/LOF/030.png"],["SEC","SEC-019","Rix Road","Ferrix",30,"blue","C","https://cdn.swu-db.com/images/cards/SEC/019.png"],["SEC","SEC-020","Uscru Entertainment District","Coruscant",30,"blue","C","https://cdn.swu-db.com/images/cards/SEC/020.png"],["SEC","SEC-021","Republic City","Hosnian Prime",30,"green","C","https://cdn.swu-db.com/images/cards/SEC/021.png"],["SEC","SEC-022","Senate Rotunda","Coruscant",30,"green","C","https://cdn.swu-db.com/images/cards/SEC/022.png"],["SEC","SEC-023","Imperial Prison Complex","Narkina 5",30,"red","C","https://cdn.swu-db.com/images/cards/SEC/023.png"],["SEC","SEC-024","Naval Intelligence HQ","Coruscant",30,"red","C","https://cdn.swu-db.com/images/cards/SEC/024.png"],["SEC","SEC-025","Amnesty Housing","Coruscant",30,"yellow","C","https://cdn.swu-db.com/images/cards/SEC/025.png"],["SEC","SEC-026","Mount Tantiss","Wayland",30,"yellow","C","https://cdn.swu-db.com/images/cards/SEC/026.png"],["LAW","LAW-019","Alliance Outpost","Lowick",26,"blue","R","https://cdn.swu-db.com/images/cards/LAW/019.png"],["LAW","LAW-020","Daimyo's Palace","Tatooine",27,"blue","C","https://cdn.swu-db.com/images/cards/LAW/020.png"],["LAW","LAW-021","Coaxium Mine","Kessel",27,"blue","C","https://cdn.swu-db.com/images/cards/LAW/021.png"],["LAW","LAW-022","Aldhani Garrison","Aldhani",27,"green","C","https://cdn.swu-db.com/images/cards/LAW/022.png"],["LAW","LAW-023","Great Pit of Carkoon","Tatooine",27,"green","S","https://cdn.swu-db.com/images/cards/LAW/023.png"],["LAW","LAW-024","Imperial Command Complex","Lothal",27,"green","C","https://cdn.swu-db.com/images/cards/LAW/024.png"],["LAW","LAW-025","Contested Caverns","Quarzite",27,"red","C","https://cdn.swu-db.com/images/cards/LAW/025.png"],["LAW","LAW-026","Shipbreaking Yard","Bracca",26,"red","R","https://cdn.swu-db.com/images/cards/LAW/026.png"],["LAW","LAW-027","Stygeon Spire","Stygeon Prime",27,"red","C","https://cdn.swu-db.com/images/cards/LAW/027.png"],["LAW","LAW-028","Canto Bight","Cantonica",27,"yellow","C","https://cdn.swu-db.com/images/cards/LAW/028.png"],["LAW","LAW-029","Citadel Research Center","Scarif",26,"yellow","R","https://cdn.swu-db.com/images/cards/LAW/029.png"],["LAW","LAW-030","Partisan Hideout","Segra Milo",27,"yellow","C","https://cdn.swu-db.com/images/cards/LAW/030.png"],["ASH","ASH-019","Fortress of the Great Mothers","Peridea",30,"blue","C","https://cdn.swu-db.com/images/cards/ASH/019.png"],["ASH","ASH-020","Nevarro City, Restored","Nevarro",30,"blue","C","https://cdn.swu-db.com/images/cards/ASH/020.png"],["ASH","ASH-021","Emperor's Throne Room","Death Star",30,"green","C","https://cdn.swu-db.com/images/cards/ASH/021.png"],["ASH","ASH-022","Kryze Castle","Kalevala",30,"green","C","https://cdn.swu-db.com/images/cards/ASH/022.png"],["ASH","ASH-023","Ancient Henge","Seatos",30,"red","C","https://cdn.swu-db.com/images/cards/ASH/023.png"],["ASH","ASH-024","Dragonsnake Bog","Dagobah",30,"red","C","https://cdn.swu-db.com/images/cards/ASH/024.png"],["ASH","ASH-025","Emperor's Observatory","Pillio",30,"yellow","C","https://cdn.swu-db.com/images/cards/ASH/025.png"],["ASH","ASH-026","Freetown","Tatooine",30,"yellow","C","https://cdn.swu-db.com/images/cards/ASH/026.png"],["HMW","HMW-019","Dune Sea","Tatooine",30,"blue","C","https://cdn.swu-db.com/images/cards/HMW/019.png"],["HMW","HMW-020","Great Grass Plains","Naboo",30,"blue","C","https://cdn.swu-db.com/images/cards/HMW/020.png"],["HMW","HMW-021","Kachirho","Kashyyyk",30,"blue","C","https://cdn.swu-db.com/images/cards/HMW/021.png"],["HMW","HMW-022","Shield Generator Complex","Endor",30,"blue","C","https://cdn.swu-db.com/images/cards/HMW/022.png"],["HMW","HMW-023","Bright Tree Village","Endor",30,"green","C","https://cdn.swu-db.com/images/cards/HMW/023.png"],["HMW","HMW-024","Origin Tree","Kashyyyk",30,"green","C","https://cdn.swu-db.com/images/cards/HMW/024.png"],["HMW","HMW-025","Theed Palace","Naboo",30,"green","C","https://cdn.swu-db.com/images/cards/HMW/025.png"],["HMW","HMW-026","Tusken Camp","Tatooine",30,"green","C","https://cdn.swu-db.com/images/cards/HMW/026.png"],["HMW","HMW-027","Bioweapons Lab","Naboo",30,"red","C","https://cdn.swu-db.com/images/cards/HMW/027.png"],["HMW","HMW-028","Jundland Wastes","Tatooine",30,"red","C","https://cdn.swu-db.com/images/cards/HMW/028.png"],["HMW","HMW-029","Dendroid Wilds","Endor",30,"red","C","https://cdn.swu-db.com/images/cards/HMW/029.png"],["HMW","HMW-030","Shadowlands","Kashyyyk",30,"red","C","https://cdn.swu-db.com/images/cards/HMW/030.png"],["HMW","HMW-031","Kyyyalstaad Swamp","Kashyyyk",30,"yellow","C","https://cdn.swu-db.com/images/cards/HMW/031.png"],["HMW","HMW-032","Mos Eisley","Tatooine",30,"yellow","C","https://cdn.swu-db.com/images/cards/HMW/032.png"],["HMW","HMW-033","Otoh Gunga","Naboo",30,"yellow","C","https://cdn.swu-db.com/images/cards/HMW/033.png"],["HMW","HMW-034","Research Station 9","Endor",30,"yellow","C","https://cdn.swu-db.com/images/cards/HMW/034.png"],["TS26","TS26-9","First Battle Memorial","Coruscant",27,"blue","R","https://cdn.swu-db.com/images/cards/TS26/9.png"],["TS26","TS26-10","Dooku's Palace","Serenno",27,"green","R","https://cdn.swu-db.com/images/cards/TS26/10.png"],["TS26","TS26-11","Executioner's Arena","Geonosis",27,"red","R","https://cdn.swu-db.com/images/cards/TS26/11.png"],["TS26","TS26-12","Sundari Palace","Mandalore",27,"yellow","R","https://cdn.swu-db.com/images/cards/TS26/12.png"],["P25","P25-97","Shield Generator Complex","Endor",30,"blue","C","https://cdn.swu-db.com/images/cards/JTL/020.png"],["P25","P25-98","Theed Palace","Naboo",30,"green","C","https://cdn.swu-db.com/images/cards/JTL/023.png"],["P25","P25-99","Massassi Temple","Yavin 4",30,"red","C","https://cdn.swu-db.com/images/cards/JTL/026.png"],["P25","P25-100","Mos Eisley","Tatooine",30,"yellow","C","https://cdn.swu-db.com/images/cards/JTL/030.png"],["P26","P26-129","Daimyo's Palace","Tatooine",27,"blue","C","https://cdn.swu-db.com/images/cards/LAW/020.png"],["P26","P26-130","Imperial Command Complex","Lothal",27,"green","C","https://cdn.swu-db.com/images/cards/LAW/024.png"],["P26","P26-131","Stygeon Spire","Stygeon Prime",27,"red","C","https://cdn.swu-db.com/images/cards/LAW/027.png"],["P26","P26-132","Canto Bight","Cantonica",27,"yellow","C","https://cdn.swu-db.com/images/cards/LAW/028.png"],["GG","GG-1","Dagobah Swamp","Dagobah",30,"blue","C","https://cdn.swu-db.com/images/cards/SOR/021.png"],["GG","GG-2","Echo Base","Hoth",30,"green","C","https://cdn.swu-db.com/images/cards/SOR/024.png"],["GG","GG-3","Catacombs of Cadera","Jedha",30,"red","C","https://cdn.swu-db.com/images/cards/SOR/026.png"],["GG","GG-4","Jabba's Palace","Tatooine",30,"yellow","C","https://cdn.swu-db.com/images/cards/SHD/026.png"],["IC27","IC27-009","City in the Clouds","Cloud City",30,"blue","C","https://cdn.swu-db.com/images/cards/IC27/009.png"],["IC27","IC27-010","Echo Base","Hoth",30,"green","C","https://cdn.swu-db.com/images/cards/IC27/010.png"],["IC27","IC27-011","KCM Mining Facility","Mustafar",30,"red","C","https://cdn.swu-db.com/images/cards/IC27/011.png"],["IC27","IC27-012","Mos Eisley","Tatooine",30,"yellow","C","https://cdn.swu-db.com/images/cards/IC27/012.png"],["IBH","IBH-2","Echo Caverns","Hoth",20,"","S","https://cdn.swu-db.com/images/cards/IBH/2.png"],["IBH","IBH-54","Forward Command Post","Hoth",20,"","S","https://cdn.swu-db.com/images/cards/IBH/54.png"]];
+document.addEventListener("error",e=>{const t=e.target;if(t&&t.tagName==="IMG"&&t.closest(".thw"))t.remove()},true);
+const SETS={SOR:"Spark of Rebellion",SHD:"Shadows of the Galaxy",TWI:"Twilight of the Republic",JTL:"Jump to Lightspeed",LOF:"Legends of the Force",SEC:"Secrets of Power"};
+const KEY="swu-base-damage-v1";
+let state={p1:{name:"You",hp:30,dmg:0,aspect:"blue"},p2:{name:"Opponent",hp:30,dmg:0,aspect:"red"},init:"p1"};
+let history=[];
+try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.p1&&s.p2)state=s;}catch(e){}
+["p1","p2"].forEach(k=>{if(state[k].base){const f=BASES.find(x=>x[1]===state[k].base[1]);state[k].base=f||null}state[k].hp=Math.max(20,Math.min(35,+state[k].hp||30))});
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}};
+const buzz=(ms=8)=>{try{navigator.vibrate&&navigator.vibrate(ms)}catch(e){}};
+
+function build(id){
+  const el=document.getElementById(id);
+  el.innerHTML=`<div class="face">
+      <button class="basecard base" type="button" aria-label="Choose base"><img class="bc-img" alt=""><span class="bc-tag"></span><span class="bc-name"></span><span class="bc-loc"></span><span class="bc-foot"><span class="bc-set"></span><span class="bc-hp"></span></span></button>
+      <button class="btn minus" type="button" aria-label="Deal 1 damage">−</button>
+      <div class="readout" aria-live="polite">
+        <div class="dmg">0</div>
+        <div class="bar"><i></i></div>
+      </div>
+      <button class="btn plus" type="button" aria-label="Heal 1 damage">+</button>
+      <button class="pill init" type="button">Initiative</button>
+    </div>`;
+  hold(el.querySelector(".minus"),()=>change(id,1));
+  hold(el.querySelector(".plus"),()=>change(id,-1));
+  el.querySelector(".base").onclick=()=>openBase(id);
+  el.querySelector(".init").onclick=()=>{state.init=(state.mode==="solo"&&state.init===id)?(id==="p1"?"p2":"p1"):id;save();render();buzz(12)};
+}
+
+// tap = 1, hold = repeat
+function hold(btn,fn){
+  let t,i;
+  const stop=()=>{clearTimeout(t);clearInterval(i)};
+  btn.addEventListener("pointerdown",e=>{e.preventDefault();fn();t=setTimeout(()=>{i=setInterval(fn,110)},450)});
+  ["pointerup","pointerleave","pointercancel"].forEach(ev=>btn.addEventListener(ev,stop));
+  btn.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();fn()}});
+}
+
+function change(id,d){
+  const p=state[id];const n=Math.max(0,Math.min(p.hp,p.dmg+d));
+  if(n===p.dmg)return;
+  history.push({id,prev:p.dmg});if(history.length>200)history.shift();
+  p.dmg=n;save();render(id);buzz();
+}
+
+function render(bumpId){
+  const solo=state.mode==="solo";
+  document.body.classList.toggle("solo",solo);
+  document.getElementById("m1").setAttribute("aria-pressed",!solo);
+  document.getElementById("m2").setAttribute("aria-pressed",solo);
+  ["p1","p2"].forEach(id=>{
+    const p=state[id],el=document.getElementById(id);
+    el.style.setProperty("--accent",`var(--${p.aspect})`);
+    el.dataset.aspect=p.aspect;
+    const dead=p.dmg>=p.hp;
+    el.classList.toggle("dead",dead);
+    el.classList.toggle("has-init",state.init===id);
+    const b=p.base;
+    el.querySelector(".bc-tag").textContent=id==="p1"?"Your Base":"Opponent";
+    el.querySelector(".bc-name").textContent=b?b[2]:"Choose a Base";
+    const card=el.querySelector(".basecard"),img=card.querySelector(".bc-img"),url=b&&b[7]?b[7]:"";
+    card.setAttribute("aria-label",b?`${b[2]}, ${b[3]}. Change base`:"Choose base");
+    if(img.dataset.src!==url){
+      img.dataset.src=url;card.classList.remove("has-img");
+      if(url){img.onload=()=>{if(img.dataset.src===url)card.classList.add("has-img")};img.onerror=()=>card.classList.remove("has-img");img.src=url}
+      else img.removeAttribute("src");
+    }
+    el.querySelector(".bc-loc").textContent=b?b[3]:"Tap to pick a card";
+    el.querySelector(".bc-set").textContent=b?b[1]:"";
+    el.querySelector(".bc-hp").innerHTML=`${p.hp}<small>HP</small>`;
+    const d=el.querySelector(".dmg");d.textContent=Math.max(0,p.hp-p.dmg);el.querySelector(".readout").setAttribute("aria-label",dead?"Base defeated":`${Math.max(0,p.hp-p.dmg)} HP remaining`);
+    if(bumpId===id){d.classList.remove("bump");void d.offsetWidth;d.classList.add("bump")}
+    el.querySelector(".bar i").style.width=Math.max(0,(p.hp-p.dmg)/p.hp*100)+"%";
+    {const has=state.init===id,w=has?"Has":"Take",ib=el.querySelector(".init");
+    ib.innerHTML=`<b>${w}</b><span>Initiative</span>`;ib.setAttribute("aria-label",has?(solo?"Has initiative. Tap to pass":"Has initiative"):"Take initiative");ib.setAttribute("aria-pressed",has)}
+  });
+}
+
+// Base settings sheet
+let editing="p1";
+const hpRange=document.getElementById("hpRange");
+function showHp(){
+  const h=state[editing].hp;
+  hpRange.value=h;hpRange.style.setProperty("--pct",((h-HP_MIN)/(HP_MAX-HP_MIN)*100)+"%");
+  document.getElementById("hpVal").textContent=h+" HP";
+}
+function showPick(){
+  const b=state[editing].base;
+  document.getElementById("pickLbl").innerHTML=b?`${esc(b[2])}<small>${esc(b[3])} · ${b[1]}</small>`:`Choose a base<small>${BASES.length} base cards</small>`;
+}
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const pickInner=document.getElementById("pickInner");
+function openPicker(){
+  pickInner.classList.toggle("to-p1",editing==="p1");pickInner.classList.toggle("to-p2",editing==="p2");
+  document.getElementById("pickSearch").value="";
+  fillList("");
+  document.getElementById("baseSheet").hidden=true;
+  document.getElementById("pickSheet").hidden=false;
+  const cur=document.querySelector('#pickList .row[aria-pressed="true"]');if(cur)cur.scrollIntoView({block:"center"});
+}
+function fillList(q){
+  q=q.trim().toLowerCase();
+  const cur=state[editing].base, list=document.getElementById("pickList");
+  const hits=BASES.filter(b=>!q||(b[2]+" "+b[3]+" "+b[1]+" "+(SETS[b[0]]||"")).toLowerCase().includes(q));
+  let html="",last="";
+  hits.forEach(b=>{
+    if(b[0]!==last){last=b[0];html+=`<h3>${SETS[b[0]]?SETS[b[0]]+" · ":""}${b[0]}</h3>`}
+    html+=`<button class="row" type="button" data-n="${b[1]}" aria-pressed="${!!cur&&cur[1]===b[1]}" style="--c:${b[5]?`var(--${b[5]})`:"var(--gray)"}"><span class="thw"><i class="d"></i>${b[7]?`<img src="${b[7]}" alt="" loading="lazy" decoding="async">`:""}</span><span>${esc(b[2])}<small>${esc(b[3])} · ${b[1]}</small></span><b>${b[4]}</b></button>`;
+  });
+  list.innerHTML=html||`<div class="empty">No bases match “${esc(q)}”.</div>`;
+  list.querySelectorAll(".row").forEach(r=>r.onclick=()=>chooseBase(r.dataset.n));
+}
+function chooseBase(n){
+  const b=BASES.find(x=>x[1]===n);if(!b)return;
+  const p=state[editing];p.base=b;p.hp=b[4];p.dmg=Math.min(p.dmg,p.hp);if(b[5])p.aspect=b[5];
+  save();render();buzz(12);
+  document.getElementById("pickSheet").hidden=true;
+  openBase(editing);
+}
+document.getElementById("pickBtn").onclick=openPicker;
+document.getElementById("pickSearch").addEventListener("input",e=>fillList(e.target.value));
+document.getElementById("pickCancel").onclick=()=>{document.getElementById("pickSheet").hidden=true;openBase(editing)};
+document.getElementById("pickSheet").onclick=e=>{if(e.target.id==="pickSheet"){e.target.hidden=true;openBase(editing)}};
+function setHp(h){
+  h=Math.max(HP_MIN,Math.min(HP_MAX,h));
+  if(h===state[editing].hp)return;
+  state[editing].hp=h;state[editing].dmg=Math.min(state[editing].dmg,h);save();render();showHp();buzz(5);
+}
+hpRange.addEventListener("input",()=>setHp(+hpRange.value));
+document.getElementById("hpDown").onclick=()=>setHp(state[editing].hp-1);
+document.getElementById("hpUp").onclick=()=>setHp(state[editing].hp+1);
+function openBase(id){
+  const s=document.getElementById("baseSheetInner");
+  s.classList.toggle("to-p1",id==="p1");s.classList.toggle("to-p2",id==="p2");
+  document.getElementById("bsTitle").textContent=id==="p1"?"Your Base":"Opponent’s Base";
+  editing=id;showHp();showPick();
+  const as=document.getElementById("aspSeg");
+  as.innerHTML=Object.entries(ASPECTS).map(([k,v])=>`<button class="sw" type="button" data-a="${k}" style="background:var(--${k})" aria-pressed="${state[id].aspect===k}">${v}</button>`).join("");
+  as.querySelectorAll("button").forEach(b=>b.onclick=()=>{state[id].aspect=b.dataset.a;save();render();as.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b))});
+  document.getElementById("baseSheet").hidden=false;
+}
+document.getElementById("bsDone").onclick=()=>document.getElementById("baseSheet").hidden=true;
+document.getElementById("baseSheet").onclick=e=>{if(e.target.id==="baseSheet")e.target.hidden=true};
+
+document.getElementById("resetBtn").onclick=()=>document.getElementById("resetSheet").hidden=false;
+document.getElementById("rsCancel").onclick=()=>document.getElementById("resetSheet").hidden=true;
+document.getElementById("rsOk").onclick=()=>{state.p1.dmg=0;state.p2.dmg=0;history=[];save();render();document.getElementById("resetSheet").hidden=true;buzz(20)};
+
+// Full screen toggle (falls back to a Home Screen tip where the browser refuses it)
+const fsBtn=document.getElementById("fsBtn");
+const fsEl=()=>document.fullscreenElement||document.webkitFullscreenElement||document.webkitCurrentFullScreenElement||null;
+const ICON_IN=fsBtn.innerHTML;
+const ICON_OUT='<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>';
+function fsLabel(){const on=!!fsEl();fsBtn.innerHTML=on?ICON_OUT:ICON_IN;fsBtn.setAttribute("aria-label",on?"Exit Full Screen":"Enter Full Screen")}
+function exitFs(){
+  const d=document;
+  if(d.exitFullscreen)return d.exitFullscreen().catch(()=>{});
+  if(d.webkitExitFullscreen)return d.webkitExitFullscreen();
+  if(d.webkitCancelFullScreen)return d.webkitCancelFullScreen();
+}
+fsBtn.onclick=async()=>{
+  const root=document.documentElement;
+  buzz(12);
+  if(fsEl()){await exitFs();setTimeout(fsLabel,150);return}
+  try{
+    if(root.requestFullscreen){await root.requestFullscreen()}
+    else if(root.webkitRequestFullscreen){root.webkitRequestFullscreen();setTimeout(()=>{if(!fsEl())document.getElementById("fsSheet").hidden=false},400)}
+    else{document.getElementById("fsSheet").hidden=false}
+  }catch(e){document.getElementById("fsSheet").hidden=false}
+  setTimeout(fsLabel,150);
+};
+document.addEventListener("fullscreenchange",fsLabel);
+document.addEventListener("webkitfullscreenchange",fsLabel);
+document.getElementById("fsOk").onclick=()=>document.getElementById("fsSheet").hidden=true;
+const standalone=window.navigator.standalone||matchMedia("(display-mode: standalone)").matches;
+if(standalone){
+  document.getElementById("fsTitle").textContent="You’re already in Home Screen mode";
+  document.getElementById("fsNote").textContent="iPhone doesn’t let web pages hide the rest of the screen, so this is as full as it gets. Any bar still showing at the top belongs to the app this page opens in and can’t be hidden from here.";
+}
+
+// Keep the screen awake during a game
+let lock=null;
+async function wake(){try{if("wakeLock" in navigator&&document.visibilityState==="visible"){lock=await navigator.wakeLock.request("screen")}}catch(e){}}
+document.addEventListener("visibilitychange",wake);
+document.addEventListener("pointerdown",()=>{if(!lock)wake()},{once:true});
+wake();
+
+document.getElementById("m1").onclick=()=>{state.mode="table";save();render();buzz(12)};
+document.getElementById("m2").onclick=()=>{state.mode="solo";save();render();buzz(12)};
+build("p1");build("p2");render();
+</script>
+
+</body>
+</html>
