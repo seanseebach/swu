@@ -86,11 +86,11 @@ body{background:radial-gradient(1.2px 1.2px at 12% 18%,#fff8,transparent),radial
 .pill .dot{width:12px;height:12px;border-radius:50%;background:var(--accent);flex:none;box-shadow:0 0 8px var(--accent)}
 .pill.init{color:var(--fg2)}
 /* Initiative token: round, like the physical counter */
-.init{width:72px;height:72px;aspect-ratio:1;border-radius:50%;padding:0;min-height:0;
+.init{width:clamp(66px,48cqmin,130px);height:clamp(66px,48cqmin,130px);aspect-ratio:1;border-radius:50%;padding:0;min-height:0;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;white-space:normal;text-align:center;
   border:1.5px solid color-mix(in srgb,var(--accent) 55%,transparent);flex:none}
-.init b{font:700 11px/1 var(--font);text-transform:uppercase;letter-spacing:.08em;opacity:.8}
-.init span{font:600 12px/1 var(--font)}
+.init b{font:700 clamp(11px,5cqmin,14px)/1 var(--font);text-transform:uppercase;letter-spacing:.08em;opacity:.8}
+.init span{font:600 clamp(12px,5.6cqmin,16px)/1 var(--font)}
 .player.has-init .pill.init{border-color:transparent}
 .player{--on:#05070d}
 .player[data-aspect="black"]{--on:#fff}
@@ -190,10 +190,10 @@ body{background:radial-gradient(1.2px 1.2px at 12% 18%,#fff8,transparent),radial
    The face is always landscape-shaped, so cqmin = its height and cqmax = its width. */
 .solo #p1 .face{padding:16px 22px 18px;column-gap:18px;row-gap:12px;
   grid-template-columns:minmax(0,1fr) auto auto auto minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);
-  grid-template-areas:"init minus read plus ." "tile tile tile tile tile"}
+  grid-template-areas:". minus read plus init" "tile tile tile tile tile"}
 @media (orientation:portrait){.solo #p1 .face{width:100cqh;height:100cqw;transform:translate(-50%,-50%) rotate(-90deg)}}
 @media (orientation:landscape){.solo #p1 .face{width:100cqw;height:100cqh;transform:translate(-50%,-50%)}}
-.solo #p1 .init{grid-area:init;justify-self:start}
+.solo #p1 .init{grid-area:init;justify-self:end;width:clamp(70px,28cqmin,130px);height:clamp(70px,28cqmin,130px)}
 .solo #p1 .minus{grid-area:minus}
 .solo #p1 .readout{grid-area:read;min-width:min(30cqmax,220px)}
 .solo #p1 .plus{grid-area:plus}
@@ -511,7 +511,7 @@ document.getElementById("boomSheet").onclick=e=>{if(e.target.id==="boomSheet")e.
 document.getElementById("sndBtn").onclick=()=>{state.muted=!state.muted;save();sndLabel();if(!state.muted)chirp(true);buzz(12)};
 build("p1");build("p2");render();sndLabel();
 // Auto-update: when the app opens or comes back, check for a newer published version and load it
-const APP_VERSION="2026-10-27.8";
+const APP_VERSION="2026-10-27.9";
 function checkUpdate(){
   if(!/github\.io$/.test(location.hostname))return;
   fetch(location.pathname+"?check="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():"").then(t=>{
