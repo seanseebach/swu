@@ -107,8 +107,8 @@ body{background:radial-gradient(1.2px 1.2px at 12% 18%,#fff8,transparent),radial
 .player.dead .dmg{color:var(--red);text-shadow:0 0 22px var(--red)}
 .player.dead .bar i{background:var(--red)}
 
-.center{display:flex;align-items:center;gap:8px;min-width:0}
-.center button{font:600 15px/1 var(--font);border:1px solid var(--edge);border-radius:999px;padding:0 16px;min-height:44px;
+.center{display:flex;align-items:center;gap:6px;min-width:0}
+.center button{font:600 15px/1 var(--font);border:1px solid var(--edge);border-radius:999px;padding:0 14px;min-height:44px;
   background:var(--fill);color:var(--gold);cursor:pointer;white-space:nowrap;flex:none}
 .center button:active{background:var(--sep)}
 .center .icon{width:44px;padding:0;display:grid;place-items:center;color:var(--fg)}
@@ -201,8 +201,9 @@ body{background:radial-gradient(1.2px 1.2px at 12% 18%,#fff8,transparent),radial
 
 <div class="app">
   <div class="center">
-    <div class="mode" role="group" aria-label="Phones"><button id="m1" type="button">One Phone</button><button id="m2" type="button">Two Phones</button></div>
+    <div class="mode" role="group" aria-label="Phones"><button id="m1" type="button" aria-label="One phone">1 Phone</button><button id="m2" type="button" aria-label="Two phones">2 Phones</button></div>
     <button id="resetBtn" type="button">New Game</button>
+    <button class="icon" id="sndBtn" type="button" aria-label="Mute sounds"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg></button>
     <button class="icon" id="fsBtn" type="button" aria-label="Enter Full Screen"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
   </div>
   <section class="player" id="p2" aria-label="Opponent base"></section>
@@ -274,6 +275,20 @@ try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.p1&&s.p2)state=s;}catc
 ["p1","p2"].forEach(k=>{if(state[k].base){const f=BASES.find(x=>x[1]===state[k].base[1]);state[k].base=f||null}state[k].hp=Math.max(20,Math.min(35,+state[k].hp||30))});
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}};
 const buzz=(ms=8)=>{try{navigator.vibrate&&navigator.vibrate(ms)}catch(e){}};
+// Droid chirp sounds: falling squawk for damage, rising chirp for healing
+let AC=null;
+function audio(){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();if(AC.state==="suspended")AC.resume()}catch(e){AC=null}return AC}
+document.addEventListener("pointerdown",audio,{once:true});
+function chirp(up){
+  if(state.muted)return;const c=audio();if(!c)return;
+  const t=c.currentTime,o=c.createOscillator(),l=c.createOscillator(),lg=c.createGain(),g=c.createGain();
+  o.type="sine";o.frequency.setValueAtTime(up?900:1500,t);o.frequency.exponentialRampToValueAtTime(up?2000:500,t+0.28);
+  l.frequency.value=up?28:18;lg.gain.value=up?160:260;l.connect(lg).connect(o.frequency);
+  g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(0.25,t+0.01);g.gain.exponentialRampToValueAtTime(0.0001,t+0.3);
+  o.connect(g).connect(c.destination);o.start(t);l.start(t);o.stop(t+0.32);l.stop(t+0.32);
+}
+const SND_ON=`<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>`,SND_OFF=`<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M17 9l5 6M22 9l-5 6"/></svg>`;
+function sndLabel(){const b=document.getElementById("sndBtn");b.innerHTML=state.muted?SND_OFF:SND_ON;b.setAttribute("aria-label",state.muted?"Turn sounds on":"Mute sounds");b.setAttribute("aria-pressed",!!state.muted)}
 
 function build(id){
   const el=document.getElementById(id);
@@ -306,7 +321,7 @@ function change(id,d){
   const p=state[id];const n=Math.max(0,Math.min(p.hp,p.dmg+d));
   if(n===p.dmg)return;
   history.push({id,prev:p.dmg});if(history.length>200)history.shift();
-  p.dmg=n;save();render(id);buzz();
+  p.dmg=n;save();render(id);buzz();chirp(d<0);
 }
 
 function render(bumpId){
@@ -453,7 +468,8 @@ wake();
 
 document.getElementById("m1").onclick=()=>{state.mode="table";save();render();buzz(12)};
 document.getElementById("m2").onclick=()=>{state.mode="solo";save();render();buzz(12)};
-build("p1");build("p2");render();
+document.getElementById("sndBtn").onclick=()=>{state.muted=!state.muted;save();sndLabel();if(!state.muted)chirp(true);buzz(12)};
+build("p1");build("p2");render();sndLabel();
 </script>
 
 </body>
