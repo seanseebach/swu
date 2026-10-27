@@ -239,12 +239,40 @@ body{background:radial-gradient(1.2px 1.2px at 12% 18%,#fff8,transparent),radial
 .sheet.full .col{align-content:start}
 .sheet.full.picker{grid-template-rows:auto auto minmax(0,1fr) auto}
 .sheet-wrap:has(.sheet.full){background:#101626}
+
+/* Laptop mode: both bases upright side by side, bar across the top, keyboard controls */
+.mode .m3{display:none}
+@media (min-width:700px) and (min-height:500px){.mode .m3{display:block}}
+.laptop .mode .m3{display:block}
+.laptop .app,.laptop.bar-right .app{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);grid-template-areas:"bar bar" "p1 p2";padding-block:16px 12px;gap:12px}
+.laptop .center{grid-area:bar;position:static;width:auto}
+.laptop .bar-in,.laptop.bar-right .bar-in{position:static;transform:none;width:100%}
+.laptop #p1{grid-area:p1}
+.laptop #p2{grid-area:p2;display:block}
+.laptop #p1 .face,.laptop #p2 .face{width:100cqw;height:100cqh;transform:translate(-50%,-50%);padding:24px 24px 44px;
+  grid-template-columns:auto minmax(0,1fr) auto;grid-template-rows:auto minmax(0,1fr) auto;
+  grid-template-areas:"tile tile tile" "minus read plus" "init init init";justify-items:center;column-gap:20px;row-gap:16px}
+.laptop .basecard{grid-area:tile;height:clamp(110px,min(32cqh,40cqw),300px)}
+.laptop .minus{grid-area:minus}
+.laptop .readout{grid-area:read}
+.laptop .plus{grid-area:plus}
+.laptop .init{grid-area:init}
+.laptop .dmg{font-size:clamp(64px,min(24cqh,26cqw),220px)}
+.laptop .btn{width:clamp(64px,min(14cqh,15cqw),130px);height:clamp(64px,min(14cqh,15cqw),130px);font-size:clamp(34px,min(7cqh,7cqw),60px)}
+.laptop .init{width:clamp(76px,min(16cqh,18cqw),150px);height:clamp(76px,min(16cqh,18cqw),150px)}
+.laptop .sheet.to-p1,.laptop .sheet.to-p2{transform:none}
+.laptop .sheet.full.to-p1,.laptop .sheet.full.to-p2{width:100vw;height:100vh;width:100dvw;height:100dvh}
+.btn,.init{position:relative}
+.key{display:none;font-style:normal;position:absolute;left:50%;bottom:-28px;transform:translateX(-50%);min-width:22px;height:22px;padding:0 6px;box-sizing:border-box;
+  border-radius:6px;border:1px solid var(--sep);background:var(--fill);color:var(--fg2);font:600 12px/20px var(--font);text-align:center;white-space:nowrap;pointer-events:none}
+.laptop .key{display:block}
+.btn.pressed{transform:scale(.92);filter:brightness(1.25)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 
 <div class="app">
   <div class="center"><div class="bar-in">
-    <div class="mode" role="group" aria-label="Phones"><button id="m1" type="button" aria-label="One phone">1 Phone</button><button id="m2" type="button" aria-label="Two phones">2 Phones</button></div>
+    <div class="mode" role="group" aria-label="Phones"><button id="m1" type="button" aria-label="One phone">1 Phone</button><button id="m2" type="button" aria-label="Two phones">2 Phones</button><button id="m3" class="m3" type="button" aria-label="Laptop">Laptop</button></div>
     <button id="resetBtn" type="button">New Game</button>
     <button class="icon" id="sndBtn" type="button" aria-label="Mute sounds"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg></button>
     <button class="icon" id="fsBtn" type="button" aria-label="Enter Full Screen"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
@@ -360,12 +388,12 @@ function build(id){
   const el=document.getElementById(id);
   el.innerHTML=`<div class="face">
       <button class="basecard base" type="button" aria-label="Choose base"><img class="bc-img" alt=""><span class="bc-name"></span><span class="bc-loc"></span><span class="bc-foot"><span class="bc-set"></span><span class="bc-hp"></span></span></button>
-      <button class="btn minus" type="button" aria-label="Deal 1 damage">−</button>
+      <button class="btn minus" type="button" aria-label="Deal 1 damage">−<span class="key"></span></button>
       <div class="readout" aria-live="polite">
         <div class="dmg">0</div>
         <div class="bar"><i></i></div>
       </div>
-      <button class="btn plus" type="button" aria-label="Heal 1 damage">+</button>
+      <button class="btn plus" type="button" aria-label="Heal 1 damage">+<span class="key"></span></button>
       <button class="pill init" type="button">Initiative</button>
     </div>`;
   hold(el.querySelector(".minus"),()=>change(id,1));
@@ -392,12 +420,15 @@ function change(id,d){
 }
 
 function render(bumpId){
-  const solo=state.mode==="solo";
+  const solo=state.mode==="solo",lap=state.mode==="laptop";
   document.body.classList.toggle("solo",solo);
-  document.getElementById("m1").setAttribute("aria-pressed",!solo);
+  document.body.classList.toggle("laptop",lap);
+  document.getElementById("m1").setAttribute("aria-pressed",!solo&&!lap);
   document.getElementById("m2").setAttribute("aria-pressed",solo);
+  document.getElementById("m3").setAttribute("aria-pressed",lap);
   ["p1","p2"].forEach(id=>{
     const p=state[id],el=document.getElementById(id);
+    el.querySelector(".minus .key").textContent=KEY_LABELS[id].minus;el.querySelector(".plus .key").textContent=KEY_LABELS[id].plus;
     el.style.setProperty("--accent",`var(--${p.aspect})`);
     el.dataset.aspect=p.aspect;
     const b0=p.base,dead=!!b0&&p.dmg>=p.hp;
@@ -420,7 +451,7 @@ function render(bumpId){
     if(bumpId===id){d.classList.remove("bump");void d.offsetWidth;d.classList.add("bump")}
     el.querySelector(".bar i").style.width=Math.max(0,(p.hp-p.dmg)/p.hp*100)+"%";
     {const has=state.init===id,w=has?"Has":"Take",ib=el.querySelector(".init");
-    ib.innerHTML=has?"":`<b>${w}</b><span>Initiative</span>`;ib.setAttribute("aria-label",has?(solo?"Has initiative. Tap to pass":"Has initiative"):"Take initiative");ib.setAttribute("aria-pressed",has)}
+    ib.innerHTML=(has?"":`<b>${w}</b><span>Initiative</span>`)+`<i class="key">${KEY_LABELS[id].init}</i>`;ib.setAttribute("aria-label",has?(solo?"Has initiative. Tap to pass":"Has initiative"):"Take initiative");ib.setAttribute("aria-pressed",has)}
   });
 }
 
@@ -522,6 +553,24 @@ wake();
 
 document.getElementById("m1").onclick=()=>{state.mode="table";save();render();buzz(12)};
 document.getElementById("m2").onclick=()=>{state.mode="solo";save();render();buzz(12)};
+document.getElementById("m3").onclick=()=>{state.mode="laptop";save();render();buzz(12)};
+// Laptop keyboard controls: left player W A D, right player arrow keys
+const KEYS={KeyW:["p1","init"],KeyA:["p1","minus"],KeyD:["p1","plus"],ArrowUp:["p2","init"],ArrowLeft:["p2","minus"],ArrowRight:["p2","plus"]};
+const KEY_LABELS={p1:{minus:"A",plus:"D",init:"W"},p2:{minus:"←",plus:"→",init:"↑"}};
+function flash(btn){btn.classList.add("pressed");clearTimeout(btn._f);btn._f=setTimeout(()=>btn.classList.remove("pressed"),120)}
+document.addEventListener("keydown",e=>{
+  if(state.mode!=="laptop")return;
+  const open=[...document.querySelectorAll(".sheet-wrap")].find(w=>!w.hidden);
+  if(open){if(e.key==="Escape"){open.hidden=true}return}
+  if(e.metaKey||e.ctrlKey||e.altKey)return;
+  const k=KEYS[e.code];if(!k)return;
+  e.preventDefault();
+  const [id,act]=k,el=document.getElementById(id);
+  audio();
+  if(act==="init"){if(e.repeat)return;el.querySelector(".init").click();return}
+  flash(el.querySelector("."+act));
+  change(id,act==="minus"?1:-1);
+});
 document.getElementById("boomOk").onclick=()=>document.getElementById("boomSheet").hidden=true;
 document.getElementById("boomSheet").onclick=e=>{if(e.target.id==="boomSheet")e.target.hidden=true};
 document.getElementById("sndBtn").onclick=()=>{state.muted=!state.muted;save();sndLabel();if(!state.muted)chirp(true);buzz(12)};
@@ -535,7 +584,7 @@ setSide();
 try{screen.orientation&&screen.orientation.addEventListener("change",setSide)}catch(e){}
 window.addEventListener("orientationchange",setSide);window.addEventListener("resize",setSide);
 // Auto-update: when the app opens or comes back, check for a newer published version and load it
-const APP_VERSION="2026-10-27.14";
+const APP_VERSION="2026-10-27.15";
 document.getElementById("verNote").textContent="Version "+APP_VERSION.split(".").pop();
 function checkUpdate(){
   if(!/github\.io$/.test(location.hostname))return;
