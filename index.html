@@ -178,32 +178,24 @@ body{background:radial-gradient(1.2px 1.2px at 12% 18%,#fff8,transparent),radial
 /* Two-phone mode: only your side, upright, filling the screen */
 .solo #p2{display:none}
 .solo .app{grid-template-columns:1fr;grid-template-rows:auto 1fr}
-.solo #p1 .face{width:100cqw;height:100cqh;transform:translate(-50%,-50%);padding:16px 24px;column-gap:20px;row-gap:10px;
-  grid-template-columns:auto auto minmax(0,1fr) auto auto;grid-template-rows:1fr;
-  grid-template-areas:"tile minus read plus init"}
-.solo #p1 .basecard{grid-area:tile}
+.solo .center{grid-column:auto}
+/* Your panel: counter row on top, large base card centered at the bottom.
+   The face is always landscape-shaped, so cqmin = its height and cqmax = its width. */
+.solo #p1 .face{padding:16px 22px 18px;column-gap:18px;row-gap:12px;
+  grid-template-columns:minmax(0,1fr) auto auto auto minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);
+  grid-template-areas:"init minus read plus ." "tile tile tile tile tile"}
+@media (orientation:portrait){.solo #p1 .face{width:100cqh;height:100cqw;transform:translate(-50%,-50%) rotate(-90deg)}}
+@media (orientation:landscape){.solo #p1 .face{width:100cqw;height:100cqh;transform:translate(-50%,-50%)}}
+.solo #p1 .init{grid-area:init;justify-self:start}
 .solo #p1 .minus{grid-area:minus}
-.solo #p1 .readout{grid-area:read}
+.solo #p1 .readout{grid-area:read;min-width:min(30cqmax,220px)}
 .solo #p1 .plus{grid-area:plus}
-.solo #p1 .init{grid-area:init}
-.solo #p1 .dmg{font-size:clamp(56px,min(40cqmin,15cqw),180px)}
-.solo #p1 .btn{width:clamp(60px,min(30cqmin,12cqw),120px);height:clamp(60px,min(30cqmin,12cqw),120px);font-size:clamp(32px,min(15cqmin,6cqw),56px)}
-.solo #p1 .basecard{height:clamp(84px,min(70cqmin,20cqw),200px)}
-.solo #p1 .sub{font-size:clamp(14px,6cqmin,19px)}
-.solo #p1 .bar{width:min(260px,85%);height:8px;border-radius:4px}
+.solo #p1 .basecard{grid-area:tile;justify-self:center;align-self:center;height:clamp(110px,52cqmin,300px);max-height:100%}
+.solo #p1 .dmg{font-size:clamp(48px,30cqmin,150px)}
+.solo #p1 .btn{width:clamp(56px,22cqmin,104px);height:clamp(56px,22cqmin,104px);font-size:clamp(30px,11cqmin,50px)}
+.solo #p1 .bar{width:min(200px,85%);height:6px;border-radius:3px;margin-top:6px}
 @media (orientation:landscape){.solo .sheet.to-p1,.solo .sheet.to-p2{transform:none}}
 @media (orientation:portrait){.solo .sheet.to-p1,.solo .sheet.to-p2{transform:rotate(-90deg)}}
-@media (orientation:portrait){
-  /* Rotation locked: turn the whole screen sideways so it reads with the phone horizontal */
-  .solo .app{position:fixed;top:50%;left:50%;width:100vh;width:100dvh;height:100vw;
-    transform:translate(-50%,-50%) rotate(-90deg);
-    padding-left:max(10px,env(safe-area-inset-bottom,0px));padding-right:max(10px,env(safe-area-inset-top,0px));
-    padding-top:max(14px,env(safe-area-inset-left,0px));padding-bottom:max(10px,env(safe-area-inset-right,0px))}
-  .solo .center{grid-column:auto}
-}
-@media (orientation:landscape){
-  .solo .app{grid-template-rows:auto 1fr}
-}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 
