@@ -31,7 +31,7 @@ html{background:var(--bg)}
 body{background:radial-gradient(1.2px 1.2px at 12% 18%,#fff8,transparent),radial-gradient(1px 1px at 78% 9%,#fff9,transparent),radial-gradient(1.4px 1.4px at 41% 63%,#fff7,transparent),radial-gradient(1px 1px at 88% 72%,#fff8,transparent),radial-gradient(1px 1px at 23% 88%,#fff6,transparent),radial-gradient(1.2px 1.2px at 63% 35%,#fff6,transparent),radial-gradient(1px 1px at 7% 52%,#fff7,transparent),radial-gradient(1px 1px at 55% 92%,#fff6,transparent),radial-gradient(1.3px 1.3px at 93% 41%,#fff8,transparent),radial-gradient(1px 1px at 33% 30%,#fff5,transparent),radial-gradient(ellipse at 50% 50%,#0d1630 0%,var(--bg) 70%) fixed;background-color:var(--bg);color:var(--fg);font-family:var(--font);margin:0;overflow:hidden;
   -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .app{height:100%;box-sizing:border-box;display:grid;gap:8px;
-  padding-block:16px 8px;padding-left:max(8px,env(safe-area-inset-left,0px));padding-right:max(8px,env(safe-area-inset-right,0px))}
+  padding-block:0 8px;padding-left:max(8px,env(safe-area-inset-left,0px));padding-right:max(8px,env(safe-area-inset-right,0px))}
 
 /* Player panel: outer box is a size container; inner face is rotated to its player */
 .player{--accent:var(--blue);background:var(--card);border:1px solid var(--edge);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-radius:22px;min-height:0;min-width:0;
@@ -287,7 +287,7 @@ body{background:radial-gradient(1.2px 1.2px at 12% 18%,#fff8,transparent),radial
 /* One Phone, portrait (preview): players at the short ends, bar along the side,
    card toward the middle of the screen with HP and initiative below it */
 @media (orientation:portrait){
-  .table .app{grid-template-columns:auto minmax(0,1fr);grid-template-rows:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"bar p2" "bar p1";padding-block:12px}
+  .table .app{grid-template-columns:auto minmax(0,1fr);grid-template-rows:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"bar p2" "bar p1";padding-block:0 8px}
   .table .center{grid-area:bar;grid-column:auto;position:relative;width:48px}
   .table .bar-in{position:absolute;top:50%;left:50%;width:calc(100vh - 24px);width:calc(100dvh - 24px);transform:translate(-50%,-50%) rotate(90deg)}
   .table .bar-in{width:max-content}
@@ -710,7 +710,7 @@ setSide();
 try{screen.orientation&&screen.orientation.addEventListener("change",setSide)}catch(e){}
 window.addEventListener("orientationchange",setSide);window.addEventListener("resize",setSide);
 // Auto-update: when the app opens or comes back, check for a newer published version and load it
-const APP_VERSION="2026-10-28.31";
+const APP_VERSION="2026-10-28.32";
 document.getElementById("verNote").textContent="Version "+APP_VERSION.split(".").pop();
 function checkUpdate(){
   if(!/github\.io$/.test(location.hostname))return;
