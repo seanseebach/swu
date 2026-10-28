@@ -14,12 +14,22 @@
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:border-box;height:100%;background:#05070d}[hidden]{display:none!important}</style>
 <script>
 /* iPhone Home Screen app: lay the counter out against the real screen edges */
-if(window.navigator.standalone||(window.matchMedia&&matchMedia("(display-mode: standalone)").matches))document.documentElement.classList.add("standalone");
+if(window.navigator.standalone||(window.matchMedia&&matchMedia("(display-mode: standalone)").matches)){
+  document.documentElement.classList.add("standalone");
+  /* size to the whole physical screen, since the page's own height stops short of the bottom */
+  var fitScreen=function(){
+    var a=screen.width,b=screen.height,land=window.innerWidth>window.innerHeight;
+    var r=document.documentElement.style;
+    r.setProperty("--scr-w",(land?Math.max(a,b):Math.min(a,b))+"px");
+    r.setProperty("--scr-h",(land?Math.min(a,b):Math.max(a,b))+"px");
+  };
+  fitScreen();window.addEventListener("resize",fitScreen);window.addEventListener("orientationchange",function(){setTimeout(fitScreen,250)});
+}
 </script>
 <style>
 html.standalone{padding:0!important;height:100%}
-html.standalone body .app{position:fixed;inset:0;height:auto;
-  padding-top:calc(env(safe-area-inset-top,0px) + 4px)!important;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 4px)!important}
+html.standalone body .app{position:fixed;top:0;left:0;right:auto;bottom:auto;width:var(--scr-w,100vw);height:var(--scr-h,100vh);
+  padding-top:calc(env(safe-area-inset-top,0px) + 14px)!important;padding-bottom:max(6px,calc(env(safe-area-inset-bottom,0px) - 18px))!important}
 </style>
 </head>
 <body>
@@ -719,7 +729,7 @@ setSide();
 try{screen.orientation&&screen.orientation.addEventListener("change",setSide)}catch(e){}
 window.addEventListener("orientationchange",setSide);window.addEventListener("resize",setSide);
 // Auto-update: when the app opens or comes back, check for a newer published version and load it
-const APP_VERSION="2026-10-28.34";
+const APP_VERSION="2026-10-28.35";
 document.getElementById("verNote").textContent="Version "+APP_VERSION.split(".").pop();
 function checkUpdate(){
   if(!/github\.io$/.test(location.hostname))return;
