@@ -109,6 +109,10 @@ body{background:radial-gradient(1.2px 1.2px at 12% 18%,#fff8,transparent),radial
 .dmg.bump{animation:bump .18s ease-out}
 @keyframes bump{50%{transform:scale(1.08)}}
 .sub{font:500 clamp(12px,9cqmin,17px)/1.3 var(--font);color:var(--fg2);margin-top:4px;font-variant-numeric:tabular-nums}
+.since{display:inline-flex;align-items:center;gap:4px;margin-top:6px;font:500 clamp(11px,4.2cqmin,13px)/1 var(--font);color:var(--fg2);font-variant-numeric:tabular-nums;min-height:13px}
+.since:empty{visibility:hidden}
+.since svg{flex:none;opacity:.8}
+.laptop .since{font-size:14px;margin-top:10px}
 .bar{width:min(200px,90%);height:6px;border-radius:3px;background:var(--fill);margin-top:6px;overflow:hidden}
 .bar i{display:block;height:100%;width:0;background:var(--accent);border-radius:3px;transition:width .25s;box-shadow:0 0 8px var(--accent)}
 .player.dead .dmg{color:var(--red);text-shadow:0 0 22px var(--red)}
@@ -435,6 +439,7 @@ function build(id){
       <div class="readout" aria-live="polite">
         <div class="dmg">0</div>
         <div class="bar"><i></i></div>
+        <div class="since" aria-live="off"></div>
       </div>
       <button class="btn plus" type="button" aria-label="Heal 1 damage">+<span class="key"></span></button>
       <button class="pill init" type="button">Initiative</button>
@@ -459,7 +464,7 @@ function change(id,d){
   if(!p.base){if(document.getElementById("baseSheet").hidden&&document.getElementById("pickSheet").hidden)openBase(id);return}const n=Math.max(0,Math.min(p.hp,p.dmg+d));
   if(n===p.dmg)return;
   history.push({id,prev:p.dmg});if(history.length>200)history.shift();
-  const wasAlive=p.dmg<p.hp;p.dmg=n;save();render(id);buzz();chirp(d<0);if(wasAlive&&p.dmg>=p.hp)showBoom(id);
+  const wasAlive=p.dmg<p.hp;p.dmg=n;p.changedAt=Date.now();save();render(id);tickSince();buzz();chirp(d<0);if(wasAlive&&p.dmg>=p.hp)showBoom(id);
 }
 
 function render(bumpId){
@@ -554,7 +559,7 @@ document.getElementById("baseSheet").onclick=e=>{if(e.target.id==="baseSheet")e.
 
 document.getElementById("resetBtn").onclick=()=>document.getElementById("resetSheet").hidden=false;
 document.getElementById("rsCancel").onclick=()=>document.getElementById("resetSheet").hidden=true;
-document.getElementById("rsOk").onclick=()=>{state.p1.dmg=0;state.p2.dmg=0;history=[];save();render();document.getElementById("resetSheet").hidden=true;buzz(20)};
+document.getElementById("rsOk").onclick=()=>{state.p1.dmg=0;state.p2.dmg=0;state.p1.changedAt=null;state.p2.changedAt=null;history=[];save();render();document.getElementById("resetSheet").hidden=true;buzz(20)};
 
 // Full screen toggle (falls back to a Home Screen tip where the browser refuses it)
 const fsBtn=document.getElementById("fsBtn");
@@ -619,6 +624,23 @@ document.getElementById("boomOk").onclick=()=>document.getElementById("boomSheet
 document.getElementById("boomSheet").onclick=e=>{if(e.target.id==="boomSheet")e.target.hidden=true};
 document.getElementById("sndBtn").onclick=()=>{state.muted=!state.muted;save();sndLabel();if(!state.muted)chirp(true);buzz(12)};
 build("p1");build("p2");render();sndLabel();
+// Time since each base's HP last changed
+function fmtSince(ms){
+  const t=Math.max(0,Math.floor(ms/1000)),h=Math.floor(t/3600),m=Math.floor(t%3600/60),sec=t%60,pad=n=>String(n).padStart(2,"0");
+  return h?`${h}:${pad(m)}:${pad(sec)}`:`${m}:${pad(sec)}`;
+}
+const CLOCK='<svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+function tickSince(){
+  ["p1","p2"].forEach(id=>{
+    const el=document.querySelector("#"+id+" .since"),at=state[id].changedAt;
+    if(!el)return;
+    if(!at||!state[id].base){if(el.innerHTML)el.innerHTML="";return}
+    const txt=fmtSince(Date.now()-at);
+    if(el.dataset.t!==txt){el.dataset.t=txt;el.innerHTML=CLOCK+`<span>${txt}</span>`;el.setAttribute("aria-label",`Last changed ${txt} ago`)}
+  });
+}
+tickSince();setInterval(tickSince,1000);
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")tickSince()});
 // Which side the phone's top edge is on when turned sideways
 function setSide(){
   let a=screen.orientation&&typeof screen.orientation.angle==="number"?screen.orientation.angle:(typeof window.orientation==="number"?window.orientation:0);
@@ -628,7 +650,7 @@ setSide();
 try{screen.orientation&&screen.orientation.addEventListener("change",setSide)}catch(e){}
 window.addEventListener("orientationchange",setSide);window.addEventListener("resize",setSide);
 // Auto-update: when the app opens or comes back, check for a newer published version and load it
-const APP_VERSION="2026-10-28.19";
+const APP_VERSION="2026-10-28.20";
 document.getElementById("verNote").textContent="Version "+APP_VERSION.split(".").pop();
 function checkUpdate(){
   if(!/github\.io$/.test(location.hostname))return;
