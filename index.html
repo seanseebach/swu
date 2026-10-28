@@ -378,9 +378,23 @@ try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.p1&&s.p2)state=s;}catc
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}};
 const buzz=(ms=8)=>{try{navigator.vibrate&&navigator.vibrate(ms)}catch(e){}};
 // Droid chirp sounds: falling squawk for damage, rising chirp for healing
-let AC=null;
-function audio(){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();if(AC.state==="suspended")AC.resume()}catch(e){AC=null}return AC}
-document.addEventListener("pointerdown",audio,{once:true});
+// iPhone pauses ("interrupts") the sound engine when Safari goes to the background.
+// Wake it on every tap or key, and rebuild it if it won't wake.
+let AC=null,acStale=false;
+function newAC(){try{if(AC&&AC.state!=="closed")AC.close().catch(()=>{})}catch(e){}AC=null;try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){AC=null}acStale=false}
+function audio(){
+  if(!AC||acStale||AC.state==="closed")newAC();
+  if(AC&&AC.state!=="running"){
+    const c=AC;
+    try{c.resume().then(()=>{if(c.state!=="running"&&c===AC)acStale=true}).catch(()=>{if(c===AC)acStale=true})}catch(e){acStale=true}
+    // a silent blip on the user's tap fully unlocks playback on iOS
+    try{const b=c.createBuffer(1,1,22050),src=c.createBufferSource();src.buffer=b;src.connect(c.destination);src.start(0)}catch(e){}
+  }
+  return AC;
+}
+["pointerdown","touchend","keydown"].forEach(ev=>document.addEventListener(ev,audio,{capture:true,passive:true}));
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&AC&&AC.state!=="running")acStale=true});
+window.addEventListener("pageshow",e=>{if(e.persisted)acStale=true});
 function chirp(up){
   if(state.muted)return;const c=audio();if(!c)return;
   const t=c.currentTime,o=c.createOscillator(),l=c.createOscillator(),lg=c.createGain(),g=c.createGain();
@@ -614,7 +628,7 @@ setSide();
 try{screen.orientation&&screen.orientation.addEventListener("change",setSide)}catch(e){}
 window.addEventListener("orientationchange",setSide);window.addEventListener("resize",setSide);
 // Auto-update: when the app opens or comes back, check for a newer published version and load it
-const APP_VERSION="2026-10-27.17";
+const APP_VERSION="2026-10-28.18";
 document.getElementById("verNote").textContent="Version "+APP_VERSION.split(".").pop();
 function checkUpdate(){
   if(!/github\.io$/.test(location.hostname))return;
