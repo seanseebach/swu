@@ -189,8 +189,9 @@ body{background:radial-gradient(1.2px 1.2px at 12% 18%,#fff8,transparent),radial
 
 /* Two-phone mode: only your side, upright, filling the screen */
 .solo #p2{display:none}
-.solo .app{grid-template-columns:1fr;grid-template-rows:auto 1fr}
-.solo .center{grid-column:auto}
+.solo .app{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) auto;grid-template-areas:"p1" "bar"}
+.solo .center{grid-column:auto;grid-area:bar}
+.solo #p1{grid-area:p1}
 /* Your panel: counter row on top, large base card centered at the bottom.
    The face is always landscape-shaped, so cqmin = its height and cqmax = its width. */
 .solo #p1 .face{padding:16px 22px 18px;column-gap:18px;row-gap:12px;
@@ -211,8 +212,8 @@ body{background:radial-gradient(1.2px 1.2px at 12% 18%,#fff8,transparent),radial
 @media (orientation:landscape){
   .app{grid-template-columns:auto minmax(0,1fr);grid-template-rows:1fr 1fr;grid-template-areas:"bar p2" "bar p1";padding-block:8px}
   .bar-right .app{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"p2 bar" "p1 bar"}
-  .solo .app{grid-template-rows:1fr;grid-template-areas:"bar p1"}
-  .solo.bar-right .app{grid-template-areas:"p1 bar"}
+  .solo .app{grid-template-columns:minmax(0,1fr) auto;grid-template-rows:1fr;grid-template-areas:"p1 bar"}
+  .solo.bar-right .app{grid-template-columns:auto minmax(0,1fr);grid-template-areas:"bar p1"}
   /* The bar is the portrait bar turned on its side, so its text keeps facing the same edge of the phone */
   .center{grid-area:bar;position:relative;width:48px}
   .bar-in{position:absolute;top:50%;left:50%;width:calc(100vh - 16px);width:calc(100dvh - 16px);transform:translate(-50%,-50%) rotate(-90deg)}
@@ -650,7 +651,7 @@ setSide();
 try{screen.orientation&&screen.orientation.addEventListener("change",setSide)}catch(e){}
 window.addEventListener("orientationchange",setSide);window.addEventListener("resize",setSide);
 // Auto-update: when the app opens or comes back, check for a newer published version and load it
-const APP_VERSION="2026-10-28.20";
+const APP_VERSION="2026-10-28.21";
 document.getElementById("verNote").textContent="Version "+APP_VERSION.split(".").pop();
 function checkUpdate(){
   if(!/github\.io$/.test(location.hostname))return;
