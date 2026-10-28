@@ -27,7 +27,9 @@ if(window.navigator.standalone||(window.matchMedia&&matchMedia("(display-mode: s
 }
 </script>
 <style>
-html.standalone{padding:0!important;height:100%}
+html.standalone{padding:0!important}
+/* iPhone sizes a Home Screen app's page one status bar short, so make the page itself as tall as the screen */
+html.standalone,html.standalone body{height:var(--scr-h,100vh)!important;min-height:calc(100% + env(safe-area-inset-top,0px));overflow:hidden;overscroll-behavior:none}
 html.standalone body .app{position:fixed;top:0;left:0;right:auto;bottom:auto;width:var(--scr-w,100vw);height:var(--scr-h,100vh);
   padding-top:calc(env(safe-area-inset-top,0px) + 14px)!important;padding-bottom:max(6px,calc(env(safe-area-inset-bottom,0px) - 18px))!important}
 </style>
@@ -729,7 +731,7 @@ setSide();
 try{screen.orientation&&screen.orientation.addEventListener("change",setSide)}catch(e){}
 window.addEventListener("orientationchange",setSide);window.addEventListener("resize",setSide);
 // Auto-update: when the app opens or comes back, check for a newer published version and load it
-const APP_VERSION="2026-10-28.35";
+const APP_VERSION="2026-10-28.36";
 document.getElementById("verNote").textContent="Version "+APP_VERSION.split(".").pop();
 function checkUpdate(){
   if(!/github\.io$/.test(location.hostname))return;
