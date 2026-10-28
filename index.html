@@ -183,8 +183,9 @@ body{background:radial-gradient(1.2px 1.2px at 12% 18%,#fff8,transparent),radial
 
 /* Mode switch in the top bar */
 /* iOS segmented control */
-.mode{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;background:rgba(118,118,128,.24);border-radius:9px;padding:2px;gap:2px;margin-right:auto;min-width:0}
-.center .mode button{border:0;border-radius:7px;background:transparent;color:var(--fg);min-height:40px;padding:0 12px;font:500 13px/1 var(--font)}
+.mode{display:grid;grid-auto-flow:column;grid-auto-columns:48px;background:rgba(118,118,128,.24);border-radius:9px;padding:2px;gap:2px;margin-right:auto;min-width:0}
+.center .mode button{border:0;border-radius:7px;background:transparent;color:var(--fg2);min-height:40px;width:48px;padding:0;display:grid;place-items:center}
+.center .mode button[aria-pressed="true"]{color:#fff}
 .center .mode button[aria-pressed="true"]{background:#636366;font-weight:600;box-shadow:0 3px 8px rgba(0,0,0,.25),0 0 0 .5px rgba(0,0,0,.04)}
 
 /* Two-phone mode: only your side, upright, filling the screen */
@@ -245,9 +246,9 @@ body{background:radial-gradient(1.2px 1.2px at 12% 18%,#fff8,transparent),radial
 .sheet-wrap:has(.sheet.full){background:#101626}
 
 /* Laptop mode: both bases upright side by side, bar across the top, keyboard controls */
-.mode .m3{display:none}
-@media (min-width:700px) and (min-height:500px){.mode .m3{display:block}}
-.laptop .mode .m3{display:block}
+.center .mode .m3{display:none}
+@media (min-width:700px) and (min-height:500px){.center .mode .m3{display:grid}}
+.laptop .center .mode .m3{display:grid}
 .laptop .app,.laptop.bar-right .app{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);grid-template-areas:"bar bar" "p1 p2";padding-block:16px 12px;gap:12px}
 .laptop .center{grid-area:bar;position:static;width:auto}
 .laptop .bar-in,.laptop.bar-right .bar-in{position:static;transform:none;width:100%}
@@ -305,7 +306,7 @@ body{background:radial-gradient(1.2px 1.2px at 12% 18%,#fff8,transparent),radial
 
 <div class="app">
   <div class="center"><div class="bar-in">
-    <div class="mode" role="group" aria-label="Phones"><button id="m1" type="button" aria-label="One phone">1 Phone</button><button id="m2" type="button" aria-label="Two phones">2 Phones</button><button id="m3" class="m3" type="button" aria-label="Laptop">Laptop</button></div>
+    <div class="mode" role="group" aria-label="Phones"><button id="m1" type="button" aria-label="One phone" title="One phone"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="3" width="10" height="18" rx="2.5"/></svg></button><button id="m2" type="button" aria-label="Two phones" title="Two phones"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="8" height="14" rx="2"/><rect x="13.5" y="5" width="8" height="14" rx="2"/></svg></button><button id="m3" class="m3" type="button" aria-label="Laptop" title="Laptop"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="5" width="15" height="10.5" rx="1.5"/><path d="M2 19h20"/></svg></button></div>
     <button id="resetBtn" type="button">New Game</button>
     <button class="icon" id="sndBtn" type="button" aria-label="Mute sounds"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg></button>
     <button class="icon" id="fsBtn" type="button" aria-label="Enter Full Screen"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
@@ -676,7 +677,7 @@ setSide();
 try{screen.orientation&&screen.orientation.addEventListener("change",setSide)}catch(e){}
 window.addEventListener("orientationchange",setSide);window.addEventListener("resize",setSide);
 // Auto-update: when the app opens or comes back, check for a newer published version and load it
-const APP_VERSION="2026-10-28.25";
+const APP_VERSION="2026-10-28.26";
 document.getElementById("verNote").textContent="Version "+APP_VERSION.split(".").pop();
 function checkUpdate(){
   if(!/github\.io$/.test(location.hostname))return;
