@@ -11,18 +11,16 @@
 <meta name="apple-mobile-web-app-title" content="Base Damage">
 <meta name="theme-color" content="#05070d">
 <title>SWU Base Damage</title>
-<style>:root{padding-top:var(--safe-top,env(safe-area-inset-top,0px));padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:border-box;height:100%;background:#05070d}[hidden]{display:none!important}</style>
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:border-box;height:100%;background:#05070d}[hidden]{display:none!important}</style>
 <script>
-/* iPhone Home Screen app: if the page already starts below the status bar, don't add the status-bar gap again */
-(function(){
-  function fit(){
-    var h=window.innerHeight,sh=Math.max(screen.height,screen.width),sw=Math.min(screen.height,screen.width);
-    var full=Math.abs(h-sh)<2||Math.abs(h-sw)<2;
-    document.documentElement.style.setProperty("--safe-top",full?"env(safe-area-inset-top,0px)":"4px");
-  }
-  fit();window.addEventListener("resize",fit);window.addEventListener("orientationchange",function(){setTimeout(fit,300)});
-})();
+/* iPhone Home Screen app: lay the counter out against the real screen edges */
+if(window.navigator.standalone||(window.matchMedia&&matchMedia("(display-mode: standalone)").matches))document.documentElement.classList.add("standalone");
 </script>
+<style>
+html.standalone{padding:0!important;height:100%}
+html.standalone body .app{position:fixed;inset:0;height:auto;
+  padding-top:calc(env(safe-area-inset-top,0px) + 4px)!important;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 4px)!important}
+</style>
 </head>
 <body>
 <style>
@@ -721,7 +719,7 @@ setSide();
 try{screen.orientation&&screen.orientation.addEventListener("change",setSide)}catch(e){}
 window.addEventListener("orientationchange",setSide);window.addEventListener("resize",setSide);
 // Auto-update: when the app opens or comes back, check for a newer published version and load it
-const APP_VERSION="2026-10-28.33";
+const APP_VERSION="2026-10-28.34";
 document.getElementById("verNote").textContent="Version "+APP_VERSION.split(".").pop();
 function checkUpdate(){
   if(!/github\.io$/.test(location.hostname))return;
