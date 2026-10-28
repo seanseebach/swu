@@ -442,7 +442,7 @@ function build(id){
   hold(el.querySelector(".minus"),()=>change(id,1));
   hold(el.querySelector(".plus"),()=>change(id,-1));
   el.querySelector(".base").onclick=()=>openBase(id);
-  el.querySelector(".init").onclick=()=>{const prev=state.init;state.init=(state.mode==="solo"&&state.init===id)?(id==="p1"?"p2":"p1"):id;save();render();buzz(12);if(state.init===id&&prev!==id)coin()};
+  el.querySelector(".init").onclick=()=>{const prev=state.init;state.init=(state.mode==="solo"&&state.init===id)?(id==="p1"?"p2":"p1"):id;save();render();buzz(12);coin()};
 }
 
 // tap = 1, hold = repeat
@@ -628,7 +628,7 @@ setSide();
 try{screen.orientation&&screen.orientation.addEventListener("change",setSide)}catch(e){}
 window.addEventListener("orientationchange",setSide);window.addEventListener("resize",setSide);
 // Auto-update: when the app opens or comes back, check for a newer published version and load it
-const APP_VERSION="2026-10-28.18";
+const APP_VERSION="2026-10-28.19";
 document.getElementById("verNote").textContent="Version "+APP_VERSION.split(".").pop();
 function checkUpdate(){
   if(!/github\.io$/.test(location.hostname))return;
