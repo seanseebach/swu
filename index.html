@@ -267,6 +267,35 @@ body{background:radial-gradient(1.2px 1.2px at 12% 18%,#fff8,transparent),radial
   border-radius:6px;border:1px solid var(--sep);background:var(--fill);color:var(--fg2);font:600 12px/20px var(--font);text-align:center;white-space:nowrap;pointer-events:none}
 .laptop .key{display:block}
 .btn.pressed{transform:scale(.92);filter:brightness(1.25)}
+
+/* One Phone, portrait (preview): players at the short ends, bar along the side,
+   card toward the middle of the screen with HP and initiative below it */
+@media (orientation:portrait){
+  .table .app{grid-template-columns:minmax(0,1fr) auto;grid-template-rows:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"p2 bar" "p1 bar";padding-block:12px}
+  .table .center{grid-area:bar;grid-column:auto;position:relative;width:48px}
+  .table .bar-in{position:absolute;top:50%;left:50%;width:calc(100vh - 24px);width:calc(100dvh - 24px);transform:translate(-50%,-50%) rotate(90deg)}
+  .table .bar-in{width:max-content}
+  .table .bar-in .mode{margin-right:0}
+  .table #p2{grid-area:p2}
+  .table #p1{grid-area:p1}
+  .table #p1 .face,.table #p2 .face{width:100cqw;height:100cqh;padding:14px 14px 16px;
+    grid-template-columns:auto minmax(0,1fr) auto auto;grid-template-rows:minmax(0,1fr) auto;
+    grid-template-areas:"tile tile tile tile" "minus read plus init";column-gap:10px;row-gap:12px}
+  .table #p1 .face{transform:translate(-50%,-50%)}
+  .table #p2 .face{transform:translate(-50%,-50%) rotate(180deg)}
+  .table .basecard{grid-area:tile;justify-self:center;align-self:center;height:auto;width:min(100%,calc((100cqh - 150px) * 1.4));max-height:100%}
+  .table .minus{grid-area:minus}
+  .table .readout{grid-area:read}
+  .table .plus{grid-area:plus}
+  .table .init{grid-area:init;width:clamp(58px,20cqw,88px);height:clamp(58px,20cqw,88px)}
+  .table .btn{width:clamp(48px,16cqw,72px);height:clamp(48px,16cqw,72px);font-size:clamp(26px,8cqw,38px)}
+  .table .dmg{font-size:clamp(44px,min(20cqh,24cqw),104px)}
+  .table .bar{margin-top:4px}
+  .table .sheet.to-p1{transform:none}
+  .table .sheet.to-p2{transform:rotate(180deg)}
+  .table .sheet.full.to-p1,.table .sheet.full.to-p2{width:100vw;height:100vh;width:100dvw;height:100dvh}
+  .table .sheet.full .cols{grid-template-columns:1fr}
+}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 
@@ -422,6 +451,7 @@ function change(id,d){
 function render(bumpId){
   const solo=state.mode==="solo",lap=state.mode==="laptop";
   document.body.classList.toggle("solo",solo);
+  document.body.classList.toggle("table",!solo&&!lap);
   document.body.classList.toggle("laptop",lap);
   document.getElementById("m1").setAttribute("aria-pressed",!solo&&!lap);
   document.getElementById("m2").setAttribute("aria-pressed",solo);
@@ -584,7 +614,7 @@ setSide();
 try{screen.orientation&&screen.orientation.addEventListener("change",setSide)}catch(e){}
 window.addEventListener("orientationchange",setSide);window.addEventListener("resize",setSide);
 // Auto-update: when the app opens or comes back, check for a newer published version and load it
-const APP_VERSION="2026-10-27.16";
+const APP_VERSION="2026-10-27.17";
 document.getElementById("verNote").textContent="Version "+APP_VERSION.split(".").pop();
 function checkUpdate(){
   if(!/github\.io$/.test(location.hostname))return;
